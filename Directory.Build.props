@@ -1,0 +1,26 @@
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!-- Package properties -->
+  <PropertyGroup>
+    <Version>0.1.0</Version>
+    <Authors>Jamie da Silva</Authors>
+    <Company>Silverlake Software LLC</Company>
+    <Copyright>Copyright &#169; 2019, Silverlake Software LLC</Copyright>
+  </PropertyGroup>
+
+  <!-- Common settings -->
+  <PropertyGroup>
+    <LangVersion>8.0</LangVersion>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <!-- Setup a common output folder for all projects -->
+  <PropertyGroup>
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)temp\$(Configuration)\$(MSBuildProjectName)</BaseIntermediateOutputPath>
+    <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
+    <MSBuildProjectExtensionsPath>$(MSBuildThisFileDirectory)temp\exts\$(MSBuildProjectName)</MSBuildProjectExtensionsPath>
+    <BaseOutputPath>$(MSBuildThisFileDirectory)output</BaseOutputPath>
+    <OutputPath>$(BaseOutputPath)/$(Configuration)</OutputPath>
+  </PropertyGroup>
+
+</Project>
