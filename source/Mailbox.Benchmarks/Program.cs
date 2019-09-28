@@ -6,13 +6,10 @@ namespace Mailboxes.Benchmarks
 {
     class Program
     {
-        static async Task Main(string[] args)
+        static void Main(string[] args)
         {
-            //var summary = BenchmarkRunner.Run<SimpleMailboxBenchmarks>();
-
-            BenchmarkRunner.Run<SkyNet>();
-
-            //Console.WriteLine(await new SkyNet().SkyNetOneMillion());
+            BenchmarkRunner.Run<SimpleMailboxBenchmarks>();
+            //BenchmarkRunner.Run<SkyNet>();
         }
     }
 }

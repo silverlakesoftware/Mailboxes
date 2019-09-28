@@ -8,8 +8,24 @@ using BenchmarkDotNet.Attributes;
 
 namespace Mailboxes.Benchmarks
 {
+    [MemoryDiagnoser]
     public class SimpleMailboxBenchmarks
     {
+        [Benchmark]
+        public Mailbox Create() => new SimpleMailbox();
+
+        [Benchmark]
+        public ValueTask<int> CreateAndOneCall()
+        {
+            return Test(new SimpleMailbox());
+
+            static async ValueTask<int> Test(Mailbox mailbox)
+            {
+                await mailbox;
+                return 42;
+            }
+        }
+
         [Benchmark]
         public async Task<int> Increment()
         {

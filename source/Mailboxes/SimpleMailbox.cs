@@ -12,7 +12,13 @@ namespace Mailboxes
     public class SimpleMailbox : Mailbox
     {
         bool _inProgress;
-        readonly Queue<Action> _actions = new Queue<Action>();
+        readonly Queue<Action> _actions = new Queue<Action>(0);
+        readonly MailboxSynchronizationContext _syncContext;
+
+        public SimpleMailbox()
+        {
+            _syncContext = new MailboxSynchronizationContext(this);
+        }
 
         public override int QueueDepth => _actions.Count;
 
@@ -37,8 +43,7 @@ namespace Mailboxes
             if (!(actionObject is Action action))
                 return;
             var oldSyncContext = SynchronizationContext.Current;
-            var syncContext = new MailboxSynchronizationContext(this);
-            SynchronizationContext.SetSynchronizationContext(syncContext);
+            SynchronizationContext.SetSynchronizationContext(_syncContext);
             action();
             SynchronizationContext.SetSynchronizationContext(oldSyncContext);
 
