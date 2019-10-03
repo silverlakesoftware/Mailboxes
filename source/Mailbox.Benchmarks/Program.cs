@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading.Tasks;
 using BenchmarkDotNet.Running;
 
 namespace Mailboxes.Benchmarks
@@ -9,7 +8,8 @@ namespace Mailboxes.Benchmarks
         static void Main(string[] args)
         {
             BenchmarkRunner.Run<SimpleMailboxBenchmarks>();
-            //BenchmarkRunner.Run<SkyNet>();
+            BenchmarkRunner.Run<ComparisonBenchmarks>();
         }
     }
 }
+ 

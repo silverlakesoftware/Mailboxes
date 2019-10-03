@@ -9,13 +9,13 @@ namespace MiniActors
 {
     class Program
     {
-        static readonly Mailbox _mailbox = new SimpleMailbox();
+        static readonly OldMailbox _mailbox = new OldSimpleMailbox();
 
         public static async Task Main(string[] args)
         {
             Console.WriteLine("Hello World!");
 
-            var mailbox = new SimpleMailbox();
+            var mailbox = new OldSimpleMailbox();
 
             await TestA();
 

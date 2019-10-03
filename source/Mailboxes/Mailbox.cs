@@ -1,9 +1,11 @@
 ﻿// Copyright © 2019, Silverlake Software LLC.  All Rights Reserved.
 // SILVERLAKE SOFTWARE LLC CONFIDENTIAL INFORMATION
 
-// Created by Jamie da Silva on 9/21/2019 5:32 PM
+// Created by Jamie da Silva on 9/29/2019 2:05 PM
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
@@ -12,29 +14,32 @@ namespace Mailboxes
     public abstract class Mailbox
     {
         readonly MailboxAwaiter _awaiter;
+        protected Dispatcher _dispatcher;
 
         protected Mailbox()
         {
             _awaiter = new MailboxAwaiter(this);
+            _dispatcher = LockingThreadPoolDispatcher.Default;
         }
 
-        protected abstract void Execute(Action action);
 
-        public abstract int QueueDepth { get; }
+        public void Execute(Action action)
+        {
+            _dispatcher.Queue(this, Execute, action);
+            static void Execute(object a) => ((Action)a)();
+        }
 
+        public bool InProgress { get; set; }
 
         public ref readonly MailboxAwaiter GetAwaiter() => ref _awaiter;
-        
-        public Mailbox Include(ref CancellationToken ct)
-        {
-            var cts = new CancellationTokenSource();
-            ct.Register(() =>
-            {
-                Execute(cts.Cancel);
-            });
-            ct = cts.Token;
-            return this;
-        }
+
+        internal abstract bool QueueAction(in ActionCallback action);
+
+        internal virtual bool IsEmpty => false;
+
+        internal abstract ActionCallback DequeueAction();
+
+        internal virtual List<ActionCallback> DequeueActions(int max) => new List<ActionCallback>(Enumerable.Repeat(DequeueAction(), 1));
 
         public readonly struct MailboxAwaiter : INotifyCompletion
         {
@@ -49,7 +54,8 @@ namespace Mailboxes
 
             public void OnCompleted(Action continuation)
             {
-                _mailbox.Execute(continuation);
+                _mailbox._dispatcher.Queue(_mailbox, Execute, continuation);
+                static void Execute(object c) => ((Action)c)();
             }
 
             public void GetResult() { }

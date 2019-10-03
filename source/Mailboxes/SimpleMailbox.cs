@@ -1,84 +1,33 @@
 ﻿// Copyright © 2019, Silverlake Software LLC.  All Rights Reserved.
 // SILVERLAKE SOFTWARE LLC CONFIDENTIAL INFORMATION
 
-// Created by Jamie da Silva on 9/21/2019 10:54 AM
+// Created by Jamie da Silva on 9/29/2019 2:10 PM
 
-using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Threading;
 
 namespace Mailboxes
 {
     public class SimpleMailbox : Mailbox
     {
-        bool _inProgress;
-        readonly Queue<Action> _actions = new Queue<Action>(0);
-        readonly MailboxSynchronizationContext _syncContext;
+        readonly Queue<ActionCallback> _actions = new Queue<ActionCallback>(0);
 
-        public SimpleMailbox()
+        internal override bool QueueAction(in ActionCallback action)
         {
-            _syncContext = new MailboxSynchronizationContext(this);
+            _actions.Enqueue(action);
+            return true;
         }
 
-        public override int QueueDepth => _actions.Count;
+        internal override bool IsEmpty => _actions.Count==0;
 
-        protected override void Execute(Action action)
+        internal override ActionCallback DequeueAction() => _actions.Dequeue();
+
+        internal override List<ActionCallback> DequeueActions(int max)
         {
-            lock (_actions)
-            {
-                if (_inProgress)
-                {
-                    _actions.Enqueue(action);
-                    return;
-                }
-
-                _inProgress = true;
-            }
-
-            ThreadPool.QueueUserWorkItem(RunAction, action);
-        }
-
-        void RunAction(object? actionObject)
-        {
-            if (!(actionObject is Action action))
-                return;
-            var oldSyncContext = SynchronizationContext.Current;
-            SynchronizationContext.SetSynchronizationContext(_syncContext);
-            action();
-            SynchronizationContext.SetSynchronizationContext(oldSyncContext);
-
-            lock (_actions)
-            {
-                if (_actions.Count==0)
-                {
-                    _inProgress = false;
-                    return;
-                }
-
-                action = _actions.Dequeue();
-            }
-
-            ThreadPool.QueueUserWorkItem(RunAction, action);
-        }
-
-        class MailboxSynchronizationContext : SynchronizationContext
-        {
-            readonly SimpleMailbox _mailbox;
-
-            public MailboxSynchronizationContext(SimpleMailbox mailbox)
-            {
-                _mailbox = mailbox;
-            }
-
-            public override void Post(SendOrPostCallback d, object? state)
-            {
-                _mailbox.Execute(() => d(state));
-            }
-
-            public override void Send(SendOrPostCallback d, object? state)
-            {
-                throw new NotImplementedException();
-            }
+            var result = new List<ActionCallback>(max);
+            for (int i = 0; i < max && _actions.Count > 0; ++i)
+                result.Add(_actions.Dequeue());
+            return result;
         }
     }
 }
