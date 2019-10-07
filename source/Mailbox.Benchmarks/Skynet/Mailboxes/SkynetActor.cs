@@ -23,7 +23,7 @@ namespace Mailboxes.Benchmarks.Skynet.Mailboxes
             _resultCallback = resultCallback;
         }
 
-        public async void Start(int level, long num)
+        public void Start(int level, long num)
         {
             //await _mailbox;
             _mailbox.Execute(() =>
@@ -43,7 +43,7 @@ namespace Mailboxes.Benchmarks.Skynet.Mailboxes
             });
         }
 
-        public async void Value(long num)
+        public void Value(long num)
         {
             //await _mailbox;
             _mailbox.Execute(() =>

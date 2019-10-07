@@ -7,7 +7,7 @@ using System.Collections.Concurrent;
 
 namespace Mailboxes
 {
-    public class ConcurrentMailbox3 : Mailbox
+    public class ConcurrentMailbox : Mailbox
     {
         readonly ConcurrentQueue<ActionCallback> _actions = new ConcurrentQueue<ActionCallback>();
 

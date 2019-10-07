@@ -9,10 +9,10 @@ namespace Mailboxes
 {
     public abstract class Dispatcher
     {
-        protected internal virtual void Queue(ActionCallback ac) => Queue(ac.Mailbox, ac.Action, ac.State);
+        protected internal virtual void Queue(in ActionCallback ac) => Queue(ac.Mailbox, ac.Action, ac.State);
 
         protected internal abstract void Queue(Mailbox mailbox, SendOrPostCallback d, object? state);
     
-        protected abstract void Execute(ActionCallback action);
+        protected abstract void Execute(in ActionCallback action);
     }
 }

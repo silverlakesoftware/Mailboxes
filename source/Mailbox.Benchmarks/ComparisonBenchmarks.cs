@@ -8,7 +8,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
-using Mailboxes.Benchmarks.PingPong.Mailboxes;
+using Mailboxes.Benchmarks.PingPong;
 
 namespace Mailboxes.Benchmarks
 {
@@ -18,7 +18,6 @@ namespace Mailboxes.Benchmarks
         [Benchmark]
         public Task<long> SkyNet()
         {
-            //return new Mailboxes.SkynetActor(0).Execute(10000, 10);
             return new Skynet.Mailboxes.RootActor().Run();
         }
 
@@ -27,9 +26,6 @@ namespace Mailboxes.Benchmarks
         {
             int messageCount = 1000000;
             int batchSize = 100;
-            var tps = new[] { 0, 0 };
-            //            var dispatcherType = "custom-dispatcher";
-            //            var mailboxType = "bounded-mailbox";
 
             var clientCount = Environment.ProcessorCount * 2;
             var clients = new MailboxPingActor[clientCount];

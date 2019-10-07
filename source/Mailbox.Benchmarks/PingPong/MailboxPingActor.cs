@@ -3,10 +3,9 @@
 
 // Created by Jamie da Silva on 9/29/2019 10:19 AM
 
-using System.Threading;
 using System.Threading.Tasks;
 
-namespace Mailboxes.Benchmarks.PingPong.Mailboxes
+namespace Mailboxes.Benchmarks.PingPong
 {
     public interface IMessageReceiver
     {
@@ -31,11 +30,12 @@ namespace Mailboxes.Benchmarks.PingPong.Mailboxes
 
         public async void Start(IMessageReceiver sender)
         {
-            await _mailbox;
-            SendBatch(sender);
+//            await _mailbox;
+//            SendBatch(sender);
+            _mailbox.Execute(() => SendBatch(sender));
         }
 
-        public async void Message(IMessageReceiver sender)
+        public void Message(IMessageReceiver sender)
         {
 //            await _mailbox;
 //            _batch--;

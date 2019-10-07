@@ -37,7 +37,7 @@ namespace Mailboxes
             }
         }
 
-        protected override void Execute(ActionCallback action)
+        protected override void Execute(in ActionCallback action)
         {
             if (action.Action==null)
             {

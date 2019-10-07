@@ -16,7 +16,7 @@ namespace Mailboxes
     public class ChannelDispatcher : Dispatcher
     {
         //readonly BlockingCollection<ActionCallback> _actions = new BlockingCollection<ActionCallback>();
-        readonly Channel<ActionCallback> _actions = Channel.CreateUnbounded<ActionCallback>(new UnboundedChannelOptions {SingleReader = true, SingleWriter = true});
+        readonly Channel<ActionCallback> _actions = Channel.CreateUnbounded<ActionCallback>(new UnboundedChannelOptions {SingleReader = true, SingleWriter = false});
         readonly List<Thread> _threads = new List<Thread>();
         readonly ThreadLocal<DispatcherSynchronizationContext> _syncContext;
 
@@ -44,7 +44,7 @@ namespace Mailboxes
 
         void QueueAction(ActionCallback action) => _actions.Writer.TryWrite(action);
 
-        protected override void Execute(ActionCallback action)
+        protected override void Execute(in ActionCallback action)
         {
             if (action.Action==null)
             {

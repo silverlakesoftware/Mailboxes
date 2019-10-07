@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Mailboxes
 {
@@ -20,6 +21,7 @@ namespace Mailboxes
         {
             _awaiter = new MailboxAwaiter(this);
             _dispatcher = LockingThreadPoolDispatcher.Default;
+            Task = Task.CompletedTask;
         }
 
 
@@ -30,6 +32,8 @@ namespace Mailboxes
         }
 
         public bool InProgress { get; set; }
+
+        public Task Task { get; set;}
 
         public ref readonly MailboxAwaiter GetAwaiter() => ref _awaiter;
 

@@ -78,6 +78,7 @@ namespace ThirdParty.Benchmarks
             var totalMessages = messageCount * 2 * clientCount;
 
             var x = (int)(totalMessages / (double)sw.ElapsedMilliseconds * 1000.0d);
+            Console.WriteLine($"{x} msg/sec");
         }
     }
 }

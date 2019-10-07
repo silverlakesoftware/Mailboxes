@@ -28,15 +28,15 @@ namespace Mailboxes.Benchmarks
             }
         }
 
-//        [Benchmark]
-//        public Task<int> CreateAndOneDirectCall()
-//        {
-//            var mailbox = CreateMailbox();
-//            var tcs = new TaskCompletionSource<int>();
-//
-//            mailbox.Execute(() => tcs.SetResult(42));
-//            return tcs.Task;
-//        }
+        [Benchmark]
+        public Task<int> CreateAndOneDirectCall()
+        {
+            var mailbox = CreateMailbox();
+            var tcs = new TaskCompletionSource<int>();
+
+            mailbox.Execute(() => tcs.SetResult(42));
+            return tcs.Task;
+        }
 
         [Benchmark]
         public Task<int> Increment()

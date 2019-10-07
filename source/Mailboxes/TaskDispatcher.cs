@@ -13,21 +13,21 @@ using System.Threading.Tasks;
 
 namespace Mailboxes
 {
-    public class LockingThreadPoolDispatcher : Dispatcher
+    public class TaskDispatcher : Dispatcher
     {
         readonly ThreadLocal<DispatcherSynchronizationContext> _tlSyncContext;
         // TODO: Put locking here in the dispatch use this for in progress
 
-        public static Dispatcher Default = new LockingThreadPoolDispatcher();
+        public static Dispatcher Default = new TaskDispatcher();
 
-        public LockingThreadPoolDispatcher()
+        public TaskDispatcher()
         {
             _tlSyncContext= new ThreadLocal<DispatcherSynchronizationContext>(() => new DispatcherSynchronizationContext(this));
         }
 
 //        protected internal override void Queue(ActionCallback ac)
 //        {
-//            Queue(ac)
+//            Queue(ac);
 //        }
 
         void QueueBulk(List<ActionCallback> actions)
@@ -45,7 +45,7 @@ namespace Mailboxes
                         Task.Run(() => QueueMailboxActions(mailbox, actionsArray));
                         return;
                     }
-
+        
                     foreach (var action in mailboxActions)
                         mailbox.QueueAction(action);
                     if (!mailbox.InProgress)
@@ -61,7 +61,7 @@ namespace Mailboxes
                 }
                 if (nextAction.Action != null)
                     Execute(nextAction);
-
+        
                 //                if (actionsArray.Length > 99)
                 //                {
                 //                    Task.Run(() => { QueueMailboxActions(mailbox, actionsArray); });
@@ -71,7 +71,7 @@ namespace Mailboxes
                 //                    QueueMailboxActions(mailbox, actionsArray);
                 //                }
             }
-
+        
             void QueueMailboxActions(Mailbox mailbox, ActionCallback[] mailboxActions)
             {
                 ActionCallback nextAction = new ActionCallback();
@@ -85,7 +85,7 @@ namespace Mailboxes
                         mailbox.InProgress = true;
                     }
                 }
-
+        
                 if (nextAction.Mailbox!=null)
                     Execute(nextAction);
             }
@@ -94,69 +94,51 @@ namespace Mailboxes
         protected internal override void Queue(Mailbox mailbox, SendOrPostCallback d, object state)
         {
             var action = new ActionCallback(mailbox, d, state);
-
-//            if (SynchronizationContext.Current is DispatcherSynchronizationContext context)
-//            {
-//                if (context.Mailbox==mailbox)
-//                    mailbox.QueueAction(action);
-//                else
-//                    context.InnerQueue(action);
-//                return;
-//            }
-            
-//            if (SynchronizationContext.Current is DispatcherSynchronizationContext context && context.Mailbox==mailbox)
-//            {
-//                mailbox.QueueAction(action);
-//                return;
-//            }
-
-
-//                        ThreadPool.QueueUserWorkItem(QueueCallback, new ActionCallback(mailbox, d, state), true);
-            bool execute = false;
-
-            bool hasLock = Monitor.TryEnter(mailbox,2);
-            try
+            lock (mailbox)
             {
-                if (!hasLock)
-                {
-                    ThreadPool.QueueUserWorkItem(QueueCallback, action, true);
-                    return;
-                }
-
-                if (mailbox.InProgress)
-                    mailbox.QueueAction(action);
-                else
-                {
-                    mailbox.InProgress = true;
-                    execute = true;
-                }
+                mailbox.Task = mailbox.Task.ContinueWith(_ => QueueCallback(action), TaskContinuationOptions.ExecuteSynchronously);
             }
-            finally
-            {
-                if (hasLock)
-                    Monitor.Exit(mailbox);
-            }
-
-            if (execute)
-                Execute(action);
         }
 
         void QueueCallback(ActionCallback action)
         {
             bool execute = false;
-            lock (action.Mailbox)
+            if (action.Mailbox.InProgress)
+                action.Mailbox.QueueAction(action);
+            else
             {
-                if (action.Mailbox.InProgress)
-                    action.Mailbox.QueueAction(action);
-                else
-                {
-                    action.Mailbox.InProgress = true;
-                    execute = true;
-                }
+                action.Mailbox.InProgress = true;
+                execute = true;
             }
 
             if (execute)
+            {
                 Execute(action);
+            }
+        }
+
+        void DequeueNextAction(object? mailboxObj)
+        {
+            var mailbox = (Mailbox)mailboxObj!;
+            if (mailbox.IsEmpty)
+            {
+                mailbox.InProgress = false;
+                return;
+            }
+
+            var action = mailbox.DequeueAction();
+
+            if (mailbox.IsEmpty)
+            {
+                Execute(action);
+                return;
+            }
+
+            var actions = new List<ActionCallback>(100);
+            while (!mailbox.IsEmpty && actions.Count < 100)
+                actions.Add(mailbox.DequeueAction());
+
+            ThreadPool.QueueUserWorkItem(WorkItemCallback, actions.ToArray(), true);
         }
 
         protected override void Execute(in ActionCallback action)
@@ -177,55 +159,84 @@ namespace Mailboxes
 
             action.Action(action.State);
 
-            bool runAgain = true;
-            for (int i = 0; i < 200 && runAgain; ++i)
-            {
-                lock (action.Mailbox)
-                {
-                    if (!action.Mailbox.IsEmpty)
-                    {
-                        action = action.Mailbox.DequeueAction();
-                        runAgain = true;
-                    }
-                    else
-                    {
-                        runAgain = false;
-                    }
-                }
+//            bool runAgain = true;
+//            for (int i = 0; i < 200 && runAgain; ++i)
+//            {
+//                lock (action.Mailbox)
+//                {
+//                    if (!action.Mailbox.IsEmpty)
+//                    {
+//                        action = action.Mailbox.DequeueAction();
+//                        runAgain = true;
+//                    }
+//                    else
+//                    {
+//                        runAgain = false;
+//                    }
+//                }
+//
+//                if (runAgain)
+//                {
+//                    action.Action(action.State);
+//                }
+//            }
 
-                if (runAgain)
-                {
-                    action.Action(action.State);
-                }
-            }
+
+//            int count = 0;
+//            while (count<10)
+//            {
+//                int actionCount = 0;
+//                ActionCallback[] actions;
+//
+//                lock (action.Mailbox)
+//                {
+//                    if (action.Mailbox.IsEmpty)
+//                        break;
+//                    
+//                    actionCount = ((SimpleMailbox)action.Mailbox).DequeueActions(out actions);
+//                }
+//
+//                for(int i = 0; i<actionCount; ++i)
+//                {
+//                    actions[i].Action(actions[i].State);
+//                }
+//
+//                ++count;
+////                syncContext.DispatchActions();
+//            }
 
             SynchronizationContext.SetSynchronizationContext(oldSyncContext);
 //            syncContext.DispatchActions();
 
-            ActionCallback nextAction = new ActionCallback();
             lock (action.Mailbox)
             {
-                if (!action.Mailbox.IsEmpty)
-                {
-                    nextAction = action.Mailbox.DequeueAction();
-                }
-                else
-                {
-                    action.Mailbox.InProgress = false;
-                }
-            }
-
-            if (nextAction.Action!=null)
-            {
-                Execute(nextAction);
+                action.Mailbox.Task.ContinueWith((_, mailbox) => DequeueNextAction(mailbox), action.Mailbox);
             }
         }
 
+        public void WorkItemCallback(ActionCallback[] actions)
+        {
+            var oldSyncContext = SynchronizationContext.Current;
+            var syncContext = _tlSyncContext.Value;
+            syncContext.SetMailbox(actions[0].Mailbox);
+            SynchronizationContext.SetSynchronizationContext(syncContext);
+
+            for (int i = 0; i < actions.Length; ++i)
+                actions[i].Action(actions[i].State);
+
+            SynchronizationContext.SetSynchronizationContext(oldSyncContext);
+
+            lock (actions[0].Mailbox)
+            {
+                actions[0].Mailbox.Task.ContinueWith((_, mailbox) => DequeueNextAction(mailbox), actions[0].Mailbox);
+            }
+        }
         class DispatcherSynchronizationContext : SynchronizationContext
         {
             readonly Dispatcher _dispatcher;
             Mailbox _mailbox;
             List<ActionCallback> _actions = new List<ActionCallback>();
+            AsyncLocal<Mailbox> _alMailbox = new AsyncLocal<Mailbox>();
 
             public DispatcherSynchronizationContext(Dispatcher dispatcher)
             {
@@ -247,7 +258,7 @@ namespace Mailboxes
             {
                 if (_actions.Count == 0)
                     return;
-                (_dispatcher as LockingThreadPoolDispatcher).QueueBulk(_actions);
+                (_dispatcher as TaskDispatcher).QueueBulk(_actions);
                 _actions = new List<ActionCallback>();
             }
 
@@ -255,6 +266,27 @@ namespace Mailboxes
             {
                 _dispatcher.Queue(_mailbox, d, state); 
                 //_dispatcher.Queue(_mailbox, Execute, new Callback(d,state));
+            }
+
+            readonly struct Callback
+            {
+                public Callback(SendOrPostCallback action, object? state)
+                {
+                    Action = action;
+                    State = state;
+                }
+
+                public SendOrPostCallback Action { get; }
+                public object? State { get; }
+
+            }
+
+            void Execute(object? callbackObj)
+            {
+                var callback = (Callback)callbackObj!;
+                SynchronizationContext.SetSynchronizationContext(null);
+                callback.Action(callback.State);
+                SynchronizationContext.SetSynchronizationContext(this);
             }
 
             public override void Send(SendOrPostCallback d, object? state)
