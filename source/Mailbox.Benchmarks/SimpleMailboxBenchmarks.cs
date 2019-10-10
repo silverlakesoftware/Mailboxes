@@ -21,7 +21,7 @@ namespace Mailboxes.Benchmarks
         {
             return Test(CreateMailbox());
 
-            static async Task<int> Test(OldMailbox mailbox)
+            static async Task<int> Test(Mailbox mailbox)
             {
                 await mailbox;
                 return 42;
@@ -40,6 +40,33 @@ namespace Mailboxes.Benchmarks
 
         [Benchmark]
         public Task<int> Increment()
+        {
+            var mailbox = CreateMailbox();
+            int value = 0;
+
+            var tcs = new TaskCompletionSource<int>();
+
+            Parallel.For(0, 1000, DoIncrement);
+
+            return tcs.Task;
+
+            void DoIncrement(int _)
+            {
+                mailbox.Execute(DoExecute);
+            }
+
+            void DoExecute()
+            {
+                ++value;
+                if (value == 1000)
+                {
+                    tcs.SetResult(value);
+                }
+            }
+        }
+
+        [Benchmark]
+        public Task<int> IncrementAwait()
         {
             var mailbox = CreateMailbox();
             int value = 0;

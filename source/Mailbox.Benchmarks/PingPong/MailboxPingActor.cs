@@ -28,11 +28,16 @@ namespace Mailboxes.Benchmarks.PingPong
             _batchSize = batchSize;
         }
 
-        public async void Start(IMessageReceiver sender)
+        public void Start(IMessageReceiver sender)
         {
 //            await _mailbox;
 //            SendBatch(sender);
-            _mailbox.Execute(() => SendBatch(sender));
+            _mailbox.Execute(DoExecute);
+
+            void DoExecute()
+            {
+                SendBatch(sender);
+            }
         }
 
         public void Message(IMessageReceiver sender)
@@ -93,7 +98,12 @@ namespace Mailboxes.Benchmarks.PingPong
 //            await _mailbox;
 //            sender.Message(sender);
 
-            _mailbox.Execute(() => sender.Message(sender));
+            _mailbox.Execute(DoExecute);
+
+            void DoExecute()
+            {
+                sender.Message(sender);
+            }
         }
     }
 }

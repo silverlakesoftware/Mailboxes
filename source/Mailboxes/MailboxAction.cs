@@ -7,16 +7,13 @@ using System.Threading;
 
 namespace Mailboxes
 {
-    public struct MailboxAction
+    public readonly struct MailboxAction
     {
-        public MailboxAction(Mailbox mailbox, SendOrPostCallback action, object state)
+        public MailboxAction(SendOrPostCallback action, object state)
         {
-            Mailbox = mailbox;
             Action = action;
             State = state;
         }
-
-        public Mailbox Mailbox { get; }
 
         public SendOrPostCallback Action { get; }
 

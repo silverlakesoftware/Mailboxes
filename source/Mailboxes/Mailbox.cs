@@ -18,7 +18,7 @@ namespace Mailboxes
         protected Mailbox()
         {
             _awaiter = new MailboxAwaiter(this);
-            _dispatcher = LockingThreadPoolDispatcher.Default;
+            _dispatcher = ThreadPoolDispatcher.Default;
         }
 
         public Dispatcher Dispatcher => _dispatcher;
@@ -35,8 +35,7 @@ namespace Mailboxes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Execute(Action action)
         {
-            QueueAction(new MailboxAction(this, Execute, action));
-            static void Execute(object a) => ((Action)a)();
+            QueueAction(new MailboxAction(a => (a as Action)?.Invoke(), action));
         }
 
         public ref readonly MailboxAwaiter GetAwaiter() => ref _awaiter;
@@ -60,8 +59,7 @@ namespace Mailboxes
 
             public void OnCompleted(Action continuation)
             {
-                _mailbox.QueueAction(new MailboxAction(_mailbox, Execute, continuation));
-                static void Execute(object c) => ((Action)c)();
+                _mailbox.QueueAction(new MailboxAction(a => (a as Action)?.Invoke(), continuation));
             }
 
             public void GetResult() { }

@@ -8,7 +8,5 @@ namespace Mailboxes
     public abstract class Dispatcher
     {
         public abstract void Execute(Mailbox mailbox);
-
-        public abstract void Execute(in MailboxAction action);
     }
 }

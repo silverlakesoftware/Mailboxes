@@ -9,12 +9,12 @@ using System.Threading;
 
 namespace Mailboxes
 {
-    public class LockingThreadPoolDispatcher : Dispatcher
+    public class ThreadPoolDispatcher : Dispatcher
     {
         readonly ThreadLocal<DispatcherSynchronizationContext> _tlSyncContext;
-        public static readonly Dispatcher Default = new LockingThreadPoolDispatcher();
+        public static readonly Dispatcher Default = new ThreadPoolDispatcher();
 
-        public LockingThreadPoolDispatcher()
+        public ThreadPoolDispatcher()
         {
             _tlSyncContext= new ThreadLocal<DispatcherSynchronizationContext>(() => new DispatcherSynchronizationContext(this));
         }
@@ -26,14 +26,14 @@ namespace Mailboxes
             ContinueExecution(mailbox);
         }
 
-        public override void Execute(in MailboxAction action)
+        void ExecuteNextAction(Mailbox mailbox)
         {
-            ThreadPool.QueueUserWorkItem(WorkItemCallback, action, true);
+            ThreadPool.QueueUserWorkItem(m => (m.Dispatcher as ThreadPoolDispatcher).WorkItemCallback(m), mailbox, true);
         }
 
-        public void WorkItemCallback(MailboxAction action)
+        public void WorkItemCallback(Mailbox mailbox)
         {
-            var mailbox = action.Mailbox;
+            var action = mailbox.DequeueAction();
             var oldSyncContext = SynchronizationContext.Current;
             var syncContext = _tlSyncContext.Value;
             syncContext.SetMailbox(mailbox);
@@ -64,8 +64,7 @@ namespace Mailboxes
         {
             if (!mailbox.IsEmpty)
             {
-                var action = mailbox.DequeueAction();
-                Execute(action);
+                ExecuteNextAction(mailbox);
             }
             else
             {
@@ -103,7 +102,7 @@ namespace Mailboxes
 
             public override void Post(SendOrPostCallback d, object? state)
             {
-                _mailbox.QueueAction(new MailboxAction(_mailbox, d, state));
+                _mailbox.QueueAction(new MailboxAction(d, state));
             }
 
             public override void Send(SendOrPostCallback d, object? state)
