@@ -9,26 +9,21 @@ namespace Mailboxes
 {
     public class ConcurrentMailbox : Mailbox
     {
-        readonly ConcurrentQueue<ActionCallback> _actions = new ConcurrentQueue<ActionCallback>();
-
-        internal override bool QueueAction(in ActionCallback action)
+        readonly ConcurrentQueue<MailboxAction> _actions = new ConcurrentQueue<MailboxAction>();
+        
+        internal override void QueueAction(in MailboxAction action)
         {
-            lock (_actions)
-            {
-                if (_actions.IsEmpty)
-                    return true;
-                _actions.Enqueue(action);
-            }
+            _actions.Enqueue(action);
 
-            return false;
+            if (!InProgress)
+                _dispatcher.Execute(this);
         }
 
-        internal override ActionCallback DequeueAction()
+        internal override bool IsEmpty => _actions.IsEmpty;
+
+        internal override MailboxAction DequeueAction()
         {
-            lock (_actions)
-            {
-                return _actions.TryDequeue(out var result) ? result : new ActionCallback();
-            }
+            return _actions.TryDequeue(out var result) ? result : new MailboxAction();
         }
     }
 }

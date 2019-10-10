@@ -11,7 +11,7 @@ namespace Mailboxes.Benchmarks
     [MemoryDiagnoser]
     public class SimpleMailboxBenchmarks
     {
-        static OldMailbox CreateMailbox() => new OldSimpleMailbox();
+        static Mailbox CreateMailbox() => new ConcurrentMailbox();
 
     //        [Benchmark]
     //        public Mailbox Create() => new SimpleMailbox();

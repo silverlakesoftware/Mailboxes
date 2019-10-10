@@ -7,11 +7,9 @@ using System.Threading;
 
 namespace Mailboxes
 {
-    public struct ActionCallback
+    public struct MailboxAction
     {
-        //public ActionCallback() { }
-
-        public ActionCallback(Mailbox mailbox, SendOrPostCallback action, object state)
+        public MailboxAction(Mailbox mailbox, SendOrPostCallback action, object state)
         {
             Mailbox = mailbox;
             Action = action;

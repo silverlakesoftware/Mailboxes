@@ -4,46 +4,48 @@
 // Created by Jamie da Silva on 9/29/2019 2:05 PM
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Mailboxes
 {
     public abstract class Mailbox
     {
         readonly MailboxAwaiter _awaiter;
+        volatile int _inProgress;
         protected Dispatcher _dispatcher;
 
         protected Mailbox()
         {
             _awaiter = new MailboxAwaiter(this);
             _dispatcher = LockingThreadPoolDispatcher.Default;
-            Task = Task.CompletedTask;
         }
 
+        public Dispatcher Dispatcher => _dispatcher;
 
+        public bool InProgress
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get { return _inProgress==1; }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal bool SetInProgress(bool inProgress) => Interlocked.Exchange(ref _inProgress, inProgress ? 1 : 0) == 1;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Execute(Action action)
         {
-            _dispatcher.Queue(this, Execute, action);
+            QueueAction(new MailboxAction(this, Execute, action));
             static void Execute(object a) => ((Action)a)();
         }
 
-        public bool InProgress { get; set; }
-
-        public Task Task { get; set;}
-
         public ref readonly MailboxAwaiter GetAwaiter() => ref _awaiter;
 
-        internal abstract bool QueueAction(in ActionCallback action);
+        internal abstract void QueueAction(in MailboxAction action);
 
         internal virtual bool IsEmpty => false;
 
-        internal abstract ActionCallback DequeueAction();
-
-        internal virtual List<ActionCallback> DequeueActions(int max) => new List<ActionCallback>(Enumerable.Repeat(DequeueAction(), 1));
+        internal abstract MailboxAction DequeueAction();
 
         public readonly struct MailboxAwaiter : INotifyCompletion
         {
@@ -58,7 +60,7 @@ namespace Mailboxes
 
             public void OnCompleted(Action continuation)
             {
-                _mailbox._dispatcher.Queue(_mailbox, Execute, continuation);
+                _mailbox.QueueAction(new MailboxAction(_mailbox, Execute, continuation));
                 static void Execute(object c) => ((Action)c)();
             }
 

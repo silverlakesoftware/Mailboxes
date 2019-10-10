@@ -3,43 +3,49 @@
 
 // Created by Jamie da Silva on 9/29/2019 2:10 PM
 
-using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace Mailboxes
 {
     public class SimpleMailbox : Mailbox
     {
-        readonly Queue<ActionCallback> _actions = new Queue<ActionCallback>(0);
-        readonly ActionCallback[] _buffer = new ActionCallback[10];
+        readonly Queue<MailboxAction> _actions = new Queue<MailboxAction>(0);
 
-        internal override bool QueueAction(in ActionCallback action)
+        internal override void QueueAction(in MailboxAction action)
         {
-            _actions.Enqueue(action);
-            return true;
+            lock (_actions)
+            {
+                _actions.Enqueue(action);
+            }
+
+            if (!InProgress)
+                _dispatcher.Execute(this);
         }
 
-        internal override bool IsEmpty => _actions.Count==0;
-
-        internal override ActionCallback DequeueAction() => _actions.Dequeue();
-
-        internal override List<ActionCallback> DequeueActions(int max)
+        internal override bool IsEmpty
         {
-            var result = new List<ActionCallback>(max);
-            for (int i = 0; i < max && _actions.Count > 0; ++i)
-                result.Add(_actions.Dequeue());
-            return result;
+            get
+            {
+                lock (_actions)
+                {
+                    return _actions.Count==0;
+                }
+            }
         }
 
-        internal int DequeueActions(out ActionCallback[] actions)
+        internal override MailboxAction DequeueAction()
         {
-            int count = Math.Min(10, _actions.Count);
-            actions = _buffer;
-            int i = 0;
-            for (; i < count; ++i)
-                actions[i] = _actions.Dequeue();
-            return i;
+            lock (_actions)
+            {
+                if (_actions.Count > 0)
+                {
+                    return _actions.Dequeue();
+                }
+                else
+                {
+                    return new MailboxAction();
+                }
+            }
         }
     }
 }

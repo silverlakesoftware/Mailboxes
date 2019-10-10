@@ -14,7 +14,7 @@ namespace Mailboxes.Benchmarks.PingPong
 
     public class MailboxPingActor : IMessageReceiver
     {
-        readonly Mailbox _mailbox = new SimpleMailbox();
+        readonly Mailbox _mailbox = new ConcurrentMailbox();
 
         private readonly TaskCompletionSource<bool> _wgStop;
         private int _messageCount;
@@ -86,9 +86,9 @@ namespace Mailboxes.Benchmarks.PingPong
 
     public class MalboxEchoActor : IMessageReceiver
     {
-        readonly Mailbox _mailbox = new SimpleMailbox();
+        readonly Mailbox _mailbox = new ConcurrentMailbox();
 
-        public async void Message(IMessageReceiver sender)
+        public void Message(IMessageReceiver sender)
         {
 //            await _mailbox;
 //            sender.Message(sender);

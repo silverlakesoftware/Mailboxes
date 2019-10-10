@@ -3,16 +3,12 @@
 
 // Created by Jamie da Silva on 9/29/2019 2:00 PM
 
-using System.Threading;
-
 namespace Mailboxes
 {
     public abstract class Dispatcher
     {
-        protected internal virtual void Queue(in ActionCallback ac) => Queue(ac.Mailbox, ac.Action, ac.State);
+        public abstract void Execute(Mailbox mailbox);
 
-        protected internal abstract void Queue(Mailbox mailbox, SendOrPostCallback d, object? state);
-    
-        protected abstract void Execute(in ActionCallback action);
+        public abstract void Execute(in MailboxAction action);
     }
 }
