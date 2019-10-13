@@ -10,7 +10,7 @@ namespace Mailboxes
     public class ConcurrentMailbox : Mailbox
     {
         readonly ConcurrentQueue<MailboxAction> _actions = new ConcurrentQueue<MailboxAction>();
-        
+
         internal override void QueueAction(in MailboxAction action)
         {
             _actions.Enqueue(action);

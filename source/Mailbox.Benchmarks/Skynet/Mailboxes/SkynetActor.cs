@@ -13,7 +13,7 @@ namespace Mailboxes.Benchmarks.Skynet.Mailboxes
     class SkynetActor
     {
         readonly Action<long> _resultCallback;
-        readonly OldMailbox _mailbox = new OldSimpleMailbox();
+        readonly Mailbox _mailbox = new SimpleMailbox();
 
         long _count;
         int _todo = 10;
@@ -57,28 +57,11 @@ namespace Mailboxes.Benchmarks.Skynet.Mailboxes
                 }
             });
         }
-
-//        public async Task<long> Execute(long size, long div)
-//        {
-//            await _mailbox;
-//            if (size == 1)
-//                return _ordinal;
-//            var tasks = new List<Task<long>>((int)div);
-//            for (long i = 0; i < div; ++i)
-//            {
-//                var childOrdinal = _ordinal + i * (size / div);
-//                var actor = new SkynetActor(childOrdinal);
-//                tasks.Add(actor.Execute(size / div, div));
-//            }
-//
-//            await Task.WhenAll(tasks);
-//            return tasks.Sum(t => t.Result);
-//        }
     }
 
     class RootActor
     {
-        readonly OldMailbox _mailbox = new OldSimpleMailbox();
+        readonly Mailbox _mailbox = new SimpleMailbox();
 
         public async Task<long> Run()
         {

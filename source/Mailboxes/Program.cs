@@ -9,13 +9,13 @@ namespace MiniActors
 {
     class Program
     {
-        static readonly OldMailbox _mailbox = new OldSimpleMailbox();
+        static readonly Mailbox _mailbox = new ConcurrentMailbox();
 
         public static async Task Main(string[] args)
         {
             Console.WriteLine("Hello World!");
 
-            var mailbox = new OldSimpleMailbox();
+            var mailbox = new ConcurrentMailbox();
 
             await TestA();
 
@@ -29,10 +29,10 @@ namespace MiniActors
         {
             await _mailbox;
             Console.WriteLine("Section A1");
-            Console.WriteLine(_mailbox.QueueDepth);
+            //Console.WriteLine(_mailbox.QueueDepth);
             Console.WriteLine(SynchronizationContext.Current);
             var httpClient = new HttpClient();
-            var t1 = httpClient.GetStringAsync("https://google.com");
+            var t1 = httpClient.GetStringAsync("https://google.com").ContinueWith(t => Console.WriteLine("In ContinueWith"));
             var t2 = Task.Delay(500);
 
             TestB();
@@ -40,11 +40,11 @@ namespace MiniActors
 
             await t1;
             Console.WriteLine("Section A2");
-            Console.WriteLine(_mailbox.QueueDepth);
+            //Console.WriteLine(_mailbox.QueueDepth);
             Console.WriteLine(SynchronizationContext.Current);
             await t2;
             Console.WriteLine("Section A3");
-            Console.WriteLine(_mailbox.QueueDepth);
+            //Console.WriteLine(_mailbox.QueueDepth);
             Console.WriteLine(SynchronizationContext.Current);
         }
 
@@ -52,7 +52,7 @@ namespace MiniActors
         {
             await _mailbox;
             Console.WriteLine("Section B1");
-            Console.WriteLine(_mailbox.QueueDepth);
+            //Console.WriteLine(_mailbox.QueueDepth);
             Console.WriteLine(SynchronizationContext.Current);
         }
 
