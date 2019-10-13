@@ -1,7 +1,5 @@
-﻿// Copyright © 2019, Silverlake Software LLC.  All Rights Reserved.
-// SILVERLAKE SOFTWARE LLC CONFIDENTIAL INFORMATION
-
-// Created by Jamie da Silva on 9/28/2019 11:09 PM
+﻿// From: https://github.com/Blind-Striker/actor-model-benchmarks/blob/master/src/Akka.Net/Akka.Net.Skynet/Program.cs
+// Apache 2 License
 
 using System;
 using System.Threading.Tasks;
@@ -25,7 +23,7 @@ namespace ThirdParty.Benchmarks.Proto
                 case Start startMessage:
                     if (startMessage.Level == 1)
                     {
-                        context.Parent.Tell(startMessage.Num);
+                        context.Send(context.Parent, startMessage.Num);
                         context.Self.Stop();
 
                         return Actor.Done;
@@ -39,7 +37,7 @@ namespace ThirdParty.Benchmarks.Proto
                             var pid = context.Spawn(Props);
                             var childStart = new Start(startMessage.Level - 1, startNum + i);
 
-                            pid.Tell(childStart);
+                            context.Send(pid, childStart);
                         }
 
                         return Actor.Done;
@@ -51,7 +49,7 @@ namespace ThirdParty.Benchmarks.Proto
 
                     if (_todo == 0)
                     {
-                        context.Parent.Tell(_count);
+                        context.Send(context.Parent, _count);
                         context.Self.Stop();
                     }
 
@@ -100,7 +98,7 @@ namespace ThirdParty.Benchmarks.Proto
                     var childStart = new SkynetActor.Start(5, 0);
 
                     _originalSender = context.Sender;
-                    pid.Tell(childStart);
+                    context.Send(pid, childStart);
 
                     break;
                 case long l:

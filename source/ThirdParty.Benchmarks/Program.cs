@@ -7,7 +7,7 @@ namespace ThirdParty.Benchmarks
         static void Main(string[] args)
         {
             BenchmarkRunner.Run<PingPongComparisonBenchmark>();
-            //BenchmarkRunner.Run<SkynetComparisonBenchmark>();
+            BenchmarkRunner.Run<SkynetComparisonBenchmark>();
         }
     }
 }

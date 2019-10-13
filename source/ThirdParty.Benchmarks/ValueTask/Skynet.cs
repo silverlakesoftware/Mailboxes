@@ -1,7 +1,4 @@
-﻿// Copyright © 2019, Silverlake Software LLC.  All Rights Reserved.
-// SILVERLAKE SOFTWARE LLC CONFIDENTIAL INFORMATION
-
-// Created by Jamie da Silva on 9/29/2019 1:37 AM
+﻿// From https://github.com/atemerev/skynet
 
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
