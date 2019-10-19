@@ -2,18 +2,26 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Mailboxes.Tests
 {
     public abstract class MailboxTests
     {
+        readonly ITestOutputHelper _output;
+
+        protected MailboxTests(ITestOutputHelper output)
+        {
+            _output = output;
+        }
+
         protected abstract Mailbox CreateMailbox();
 
         [Fact]
         public async Task MailboxIsNotReentrant()
         {
             int check = 0;
-            var mailbox = CreateMailbox();
+            var sut = CreateMailbox();
 
             using var mre1 = new ManualResetEventSlim();
             var tcs1 = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -25,7 +33,7 @@ namespace Mailboxes.Tests
 
             void Test(TaskCompletionSource<bool> tcs)
             {
-                mailbox.Execute(() =>
+                sut.Execute(() =>
                 {
                     var result = Interlocked.Increment(ref check);
                     Assert.Equal(1, result);
@@ -42,7 +50,7 @@ namespace Mailboxes.Tests
         public async Task MailboxIsNotReentrantUnderStress()
         {
             int check = 0;
-            var mailbox = CreateMailbox();
+            var sut = CreateMailbox();
 
             const int concurrency = 10000;
             var tasks = new Task[concurrency];
@@ -57,7 +65,7 @@ namespace Mailboxes.Tests
 
             void Test(TaskCompletionSource<bool> tcs)
             {
-                mailbox.Execute(() =>
+                sut.Execute(() =>
                 {
                     var result = Interlocked.Increment(ref check);
                     Assert.Equal(1, result);
@@ -73,7 +81,7 @@ namespace Mailboxes.Tests
         [Fact]
         public async Task CancellationWaitsForMessage()
         {
-            var mailbox = CreateMailbox();
+            var sut = CreateMailbox();
 
             using var cts = new CancellationTokenSource();
             using var mre1 = new ManualResetEventSlim();
@@ -88,7 +96,7 @@ namespace Mailboxes.Tests
 
             async Task Test(CancellationToken ct)
             {
-                await mailbox.Include(ref ct);
+                await sut.Include(ref ct);
                 mre2.Set();
                 mre1.Wait();
                 Assert.False(ct.IsCancellationRequested);
@@ -100,5 +108,98 @@ namespace Mailboxes.Tests
                 Assert.True(ct.IsCancellationRequested);
             }
         }
+
+        [Fact]
+        public async Task MailboxStopsProcessingMessagesOnStop()
+        {
+            var sut = CreateMailbox();
+
+            using var mre1 = new ManualResetEventSlim();
+            using var mre2 = new ManualResetEventSlim();
+            bool actionExecuted = false;
+
+            sut.Execute(() =>
+            {
+                mre1.Set();
+                mre2.Wait();
+            });
+            mre1.Wait();
+            sut.Execute(() => { actionExecuted = true; });
+            var stopTask = sut.StopAsync();
+            mre2.Set();
+            await stopTask;
+            Assert.False(actionExecuted);
+        }
+
+        [Fact]
+        public async Task StoppedMailboxDoesNotStart()
+        {
+            var sut = CreateMailbox();
+            var stopTask = sut.StopAsync();
+
+            bool actionExecuted = false;
+            sut.Execute(() => { actionExecuted = true; });
+            await stopTask;
+            Assert.False(actionExecuted);
+        }
+
+        [Fact]
+        public async Task StopWorksUnderStress()
+        {
+            const int msgCount = 1000;
+            int minCounter = int.MaxValue;
+            int maxCounter = 0;
+
+            for (int r = 0; r < 100; ++r)
+            {
+                var sut = CreateMailbox();
+
+                using var mre1 = new ManualResetEventSlim();
+                int counter = 0;
+                bool stopSending = false;
+
+                var sendTask = Task.Run(() =>
+                {
+                    for (int i = 0; i < msgCount && !stopSending; ++i)
+                    {
+                        sut.Execute(Test);
+                    }
+                });
+
+                mre1.Wait();
+                await sut.StopAsync();
+
+                // Confirm we eventual stop
+                var tempCounter = counter;
+                Assert.True(tempCounter < msgCount);
+                minCounter = Math.Min(minCounter, tempCounter);
+                maxCounter = Math.Max(maxCounter, tempCounter);
+
+                // Confirm this is stable
+                Thread.Sleep(1);
+                Assert.True(counter==tempCounter);
+
+                // Stop sending and let this wrap up
+                stopSending = true;
+                await sendTask;
+
+                void Test()
+                {
+                    sut.Execute(() =>
+                    {
+                        Interlocked.Increment(ref counter);
+                        if (counter==3)
+                        {
+                            mre1.Set();
+                        }
+
+                        Thread.Yield();
+                    });
+                }
+            }
+
+            _output.WriteLine($"Range = [{minCounter},{maxCounter}]");
+        }
+
     }
 }

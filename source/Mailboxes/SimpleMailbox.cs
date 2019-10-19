@@ -11,15 +11,12 @@ namespace Mailboxes
     {
         readonly Queue<MailboxAction> _actions = new Queue<MailboxAction>(0);
 
-        internal override void QueueAction(in MailboxAction action)
+        protected override void DoQueueAction(in MailboxAction action)
         {
             lock (_actions)
             {
                 _actions.Enqueue(action);
             }
-
-            if (!InProgress)
-                _dispatcher.Execute(this);
         }
 
         internal override bool IsEmpty
@@ -33,18 +30,19 @@ namespace Mailboxes
             }
         }
 
-        internal override MailboxAction DequeueAction()
+        protected override MailboxAction DoDequeueAction()
         {
             lock (_actions)
             {
-                if (_actions.Count > 0)
-                {
-                    return _actions.Dequeue();
-                }
-                else
-                {
-                    return new MailboxAction();
-                }
+                return _actions.Count > 0 ? _actions.Dequeue() : new MailboxAction();
+            }
+        }
+
+        protected internal override void OnStop()
+        {
+            lock (_actions)
+            {
+                _actions.Clear();
             }
         }
     }

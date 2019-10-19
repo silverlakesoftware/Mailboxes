@@ -4,7 +4,6 @@
 // Created by Jamie da Silva on 9/29/2019 1:59 PM
 
 using System;
-using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace Mailboxes
@@ -21,19 +20,18 @@ namespace Mailboxes
 
         public override void Execute(Mailbox mailbox)
         {
-            if (mailbox.SetInProgress(true))
-                return;
-            ContinueExecution(mailbox);
-        }
-
-        void ExecuteNextAction(Mailbox mailbox)
-        {
             ThreadPool.QueueUserWorkItem(m => (m.Dispatcher as ThreadPoolDispatcher).WorkItemCallback(m), mailbox, true);
         }
 
         public void WorkItemCallback(Mailbox mailbox)
         {
             var action = mailbox.DequeueAction();
+            if (action.Action==null)
+            {
+                mailbox.TryContinueRunning();
+                return;
+            }
+
             var oldSyncContext = SynchronizationContext.Current;
             var syncContext = _tlSyncContext.Value;
             syncContext.SetMailbox(mailbox);
@@ -55,37 +53,7 @@ namespace Mailboxes
             }
 
             SynchronizationContext.SetSynchronizationContext(oldSyncContext);
-            ContinueExecution(mailbox);
-        }
-
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void ContinueExecution(Mailbox mailbox)
-        {
-            if (!mailbox.IsEmpty)
-            {
-                ExecuteNextAction(mailbox);
-            }
-            else
-            {
-                if (!mailbox.SetInProgress(false))
-                    return;
-                if (!mailbox.IsEmpty)
-                    Execute(mailbox);
-            }
-
-//            var action = mailbox.DequeueAction();
-//            if (action.Action != null)
-//            {
-//                Execute(action);
-//            }
-//            else
-//            {
-//                if (!mailbox.SetInProgress(false))
-//                    return;
-//                if (!mailbox.IsEmpty)
-//                    Execute(mailbox);
-//            }
+            mailbox.TryContinueRunning();
         }
 
         class DispatcherSynchronizationContext : SynchronizationContext
