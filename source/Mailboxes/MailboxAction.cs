@@ -9,7 +9,7 @@ namespace Mailboxes
 {
     public readonly struct MailboxAction
     {
-        public MailboxAction(SendOrPostCallback action, object state)
+        public MailboxAction(SendOrPostCallback action, object? state)
         {
             Action = action;
             State = state;
@@ -17,6 +17,6 @@ namespace Mailboxes
 
         public SendOrPostCallback Action { get; }
 
-        public object State { get; }
+        public object? State { get; }
     }
 }

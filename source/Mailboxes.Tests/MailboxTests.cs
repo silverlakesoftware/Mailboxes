@@ -201,5 +201,51 @@ namespace Mailboxes.Tests
             _output.WriteLine($"Range = [{minCounter},{maxCounter}]");
         }
 
+        [Fact]
+        public void AsyncLocalFlowsCorrectlyUsingAwait()
+        {
+            var sut = CreateMailbox();
+
+            using var mre1 = new ManualResetEventSlim();
+
+            var target = new AsyncLocal<int>();
+            target.Value = 1;
+
+            Test();
+
+            async void Test()
+            {
+                Assert.Equal(1, target.Value);
+                await sut;
+                Assert.Equal(1, target.Value);
+                
+                mre1.Set();
+            }
+
+            mre1.Wait();
+            Assert.Equal(1, target.Value);
+        }
+
+        [Fact]
+        public void AsyncLocalFlowsCorrectlyUsingExecute()
+        {
+            var sut = CreateMailbox();
+
+            using var mre1 = new ManualResetEventSlim();
+
+            var target = new AsyncLocal<int>();
+            target.Value = 1;
+
+            sut.Execute(Test);
+
+            void Test()
+            {
+                Assert.Equal(1, target.Value);
+                mre1.Set();
+            }
+
+            mre1.Wait();
+            Assert.Equal(1, target.Value);
+        }
     }
 }

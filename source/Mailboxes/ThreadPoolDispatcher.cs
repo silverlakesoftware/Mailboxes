@@ -10,13 +10,7 @@ namespace Mailboxes
 {
     public class ThreadPoolDispatcher : Dispatcher
     {
-        readonly ThreadLocal<DispatcherSynchronizationContext> _tlSyncContext;
         public static readonly Dispatcher Default = new ThreadPoolDispatcher();
-
-        public ThreadPoolDispatcher()
-        {
-            _tlSyncContext= new ThreadLocal<DispatcherSynchronizationContext>(() => new DispatcherSynchronizationContext(this));
-        }
 
         public override void Execute(Mailbox mailbox)
         {
@@ -33,9 +27,7 @@ namespace Mailboxes
             }
 
             var oldSyncContext = SynchronizationContext.Current;
-            var syncContext = _tlSyncContext.Value;
-            syncContext.SetMailbox(mailbox);
-            SynchronizationContext.SetSynchronizationContext(syncContext);
+            SynchronizationContext.SetSynchronizationContext(mailbox.SyncContext);
 
             action.Action(action.State);
 
@@ -54,29 +46,6 @@ namespace Mailboxes
 
             SynchronizationContext.SetSynchronizationContext(oldSyncContext);
             mailbox.TryContinueRunning();
-        }
-
-        class DispatcherSynchronizationContext : SynchronizationContext
-        {
-            readonly Dispatcher _dispatcher;
-            Mailbox _mailbox;
-
-            public DispatcherSynchronizationContext(Dispatcher dispatcher)
-            {
-                _dispatcher = dispatcher;
-            }
-
-            public void SetMailbox(Mailbox mailbox) => _mailbox = mailbox;
-
-            public override void Post(SendOrPostCallback d, object? state)
-            {
-                _mailbox.QueueAction(new MailboxAction(d, state));
-            }
-
-            public override void Send(SendOrPostCallback d, object? state)
-            {
-                throw new NotImplementedException();
-            }
         }
     }
 }

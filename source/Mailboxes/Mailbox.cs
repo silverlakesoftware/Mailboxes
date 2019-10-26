@@ -20,6 +20,7 @@ namespace Mailboxes
         const int RunStateRunning = 1;
 
         readonly MailboxAwaiter _awaiter;
+
         volatile int _stopState = StopStateNo;
         volatile int _runState = RunStateIdle;
         protected Dispatcher _dispatcher;
@@ -29,7 +30,10 @@ namespace Mailboxes
         {
             _awaiter = new MailboxAwaiter(this);
             _dispatcher = ThreadPoolDispatcher.Default;
+            SyncContext = new MailboxSynchronizationContext(this);
         }
+
+        internal MailboxSynchronizationContext SyncContext { get; }
 
         public Dispatcher Dispatcher => _dispatcher;
 
@@ -175,6 +179,20 @@ namespace Mailboxes
             }
 
             public void GetResult() { }
+        }
+
+        public class MailboxSynchronizationContext : SynchronizationContext
+        {
+            // ReSharper disable once FieldCanBeMadeReadOnly.Local
+            Mailbox _mailbox;
+
+            public MailboxSynchronizationContext(Mailbox mailbox) => _mailbox = mailbox;
+
+            public override SynchronizationContext CreateCopy() => this;
+
+            public override void Post(SendOrPostCallback d, object? state) => _mailbox.QueueAction(new MailboxAction(d, state));
+
+            public override void Send(SendOrPostCallback d, object? state) => throw new NotImplementedException();
         }
     }
 }
