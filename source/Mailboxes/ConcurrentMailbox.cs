@@ -13,7 +13,7 @@ namespace Mailboxes
 
         protected override void DoQueueAction(in MailboxAction action)
         {
-            _actions!.Enqueue(action);
+            _actions?.Enqueue(action);
         }
 
         internal override bool IsEmpty => _actions?.IsEmpty ?? true;
