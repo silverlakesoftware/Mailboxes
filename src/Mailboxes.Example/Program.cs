@@ -3,9 +3,8 @@ using System.Diagnostics;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using Mailboxes;
 
-namespace MiniActors
+namespace Mailboxes.Example
 {
     class Program
     {
@@ -56,7 +55,7 @@ namespace MiniActors
             Console.WriteLine(SynchronizationContext.Current);
         }
 
-        public static async Task TestC( CancellationToken ct )
+        public static async Task TestC(CancellationToken ct)
         {
             await _mailbox.Include(ref ct);
             var sw = Stopwatch.StartNew();
