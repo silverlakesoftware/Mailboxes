@@ -11,6 +11,10 @@ namespace Mailboxes
     {
         readonly Queue<MailboxAction> _actions = new Queue<MailboxAction>(0);
 
+        public SimpleMailbox() { }
+
+        public SimpleMailbox(Dispatcher dispatcher) : base(dispatcher) { }
+
         protected override void DoQueueAction(in MailboxAction action)
         {
             lock (_actions)

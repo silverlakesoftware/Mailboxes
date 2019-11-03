@@ -21,12 +21,17 @@ namespace Mailboxes.Benchmarks
             return new Skynet.Mailboxes.RootActor().Run();
         }
 
+        [Arguments(50)]
+        [Arguments(100)]
+        [Arguments(500)]
         [Benchmark]
-        public void PingPong()
+        public void PingPong(int executionUnits)
         {
             int messageCount = 1000000;
             int batchSize = 100;
 
+            var oldExecutionUnits = ThreadPoolDispatcher.Default.ExecutionUnits;
+            ThreadPoolDispatcher.Default.ExecutionUnits = executionUnits;
             var clientCount = Environment.ProcessorCount * 2;
             var clients = new MailboxPingActor[clientCount];
             var echos = new MalboxEchoActor[clientCount];
@@ -61,6 +66,7 @@ namespace Mailboxes.Benchmarks
 
             var x = (int)(totalMessages / (double)sw.ElapsedMilliseconds * 1000.0d);
             Console.WriteLine($"{x} msg/sec");
+            ThreadPoolDispatcher.Default.ExecutionUnits = oldExecutionUnits;
         }
     }
 }

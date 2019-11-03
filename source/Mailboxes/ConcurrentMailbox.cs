@@ -11,6 +11,10 @@ namespace Mailboxes
     {
         ConcurrentQueue<MailboxAction>? _actions = new ConcurrentQueue<MailboxAction>();
 
+        public ConcurrentMailbox() { }
+
+        public ConcurrentMailbox(Dispatcher dispatcher) : base(dispatcher) { }
+
         protected override void DoQueueAction(in MailboxAction action)
         {
             _actions?.Enqueue(action);

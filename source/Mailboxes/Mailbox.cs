@@ -33,6 +33,13 @@ namespace Mailboxes
             SyncContext = new MailboxSynchronizationContext(this);
         }
 
+        protected Mailbox(Dispatcher dispatcher)
+        {
+            _awaiter = new MailboxAwaiter(this);
+            _dispatcher = dispatcher;
+            SyncContext = new MailboxSynchronizationContext(this);
+        }
+
         internal MailboxSynchronizationContext SyncContext { get; }
 
         public Dispatcher Dispatcher => _dispatcher;

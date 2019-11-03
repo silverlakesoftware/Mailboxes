@@ -10,7 +10,14 @@ namespace Mailboxes
 {
     public class ThreadPoolDispatcher : Dispatcher
     {
-        public static readonly Dispatcher Default = new ThreadPoolDispatcher();
+        public static readonly ThreadPoolDispatcher Default = new ThreadPoolDispatcher();
+        int _executionUnits = 100;
+
+        public int ExecutionUnits
+        {
+            get => _executionUnits;
+            set => _executionUnits = Math.Max(1, value - 1);
+        }
 
         public override void Execute(Mailbox mailbox)
         {
@@ -31,7 +38,8 @@ namespace Mailboxes
 
             action.Action(action.State);
 
-            for (int i = 0; i < 99; ++i)
+            var executionUnits = _executionUnits - 1;
+            for (int i = 0; i < executionUnits; ++i)
             {
                 action = mailbox.DequeueAction();
                 if (action.Action!=null)
