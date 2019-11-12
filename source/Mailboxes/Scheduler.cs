@@ -23,7 +23,7 @@ namespace Mailboxes
                 return;
             }
 
-            if (timeSpanMs == 0)
+            if (timeSpanMs==0)
             {
                 action(state);
                 return;

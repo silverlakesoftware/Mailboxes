@@ -18,8 +18,10 @@ namespace Mailboxes.Example
 
             await TestA();
 
-            var cts = new CancellationTokenSource(100);
-            await TestC(cts.Token);
+            //var cts = new CancellationTokenSource(100);
+            //await TestC(cts.Token);
+
+            await TestD();
 
             Console.WriteLine(SynchronizationContext.Current);
         }
@@ -63,9 +65,20 @@ namespace Mailboxes.Example
             Console.WriteLine(sw.ElapsedMilliseconds);
         }
 
-        public static async Task DoDelay(CancellationToken ct)
+        public static async Task<int> DoDelay(CancellationToken ct)
         {
             await Task.Delay(5000, ct);
+            return 1;
+        }
+
+        public static async Task TestD()
+        {
+            var state = new object();
+            await _mailbox.WithContext(state);
+            var state2 = new object();
+            await DoDelay(CancellationToken.None).ContinueWithContext(state2);
+            // Need to explore if setting the state on the synccontext in OnCompleted is safe, when it's not used
+            // until after execution in the Post
         }
     }
 }

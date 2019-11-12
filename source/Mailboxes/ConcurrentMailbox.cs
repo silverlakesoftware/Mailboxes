@@ -13,9 +13,9 @@ namespace Mailboxes
 
         public ConcurrentMailbox() { }
 
-        public ConcurrentMailbox(Dispatcher dispatcher) : base(dispatcher) { }
+        public ConcurrentMailbox(Dispatcher? dispatcher) : base(dispatcher) { }
 
-        protected override void DoQueueAction(in MailboxAction action)
+        protected override void DoQueueAction(in MailboxAction action, object? actionContext)
         {
             _actions?.Enqueue(action);
         }
@@ -30,7 +30,7 @@ namespace Mailboxes
 
         protected internal override void OnStop()
         {
-            _actions = null; 
+            _actions = null;
         }
     }
 }

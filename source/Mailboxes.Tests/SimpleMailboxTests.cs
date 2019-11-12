@@ -7,7 +7,7 @@ using Xunit.Abstractions;
 
 namespace Mailboxes.Tests
 {
-    public class SimpleMailboxTests : MailboxTests
+    public class SimpleMailboxTests : MailboxBaseTests
     {
         public SimpleMailboxTests(ITestOutputHelper output) : base(output) { }
 

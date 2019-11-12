@@ -7,7 +7,7 @@ using Xunit.Abstractions;
 
 namespace Mailboxes.Tests
 {
-    public class ConcurrentMailboxTests : MailboxTests
+    public class ConcurrentMailboxTests : MailboxBaseTests
     {
         public ConcurrentMailboxTests(ITestOutputHelper output) : base(output) { }
 

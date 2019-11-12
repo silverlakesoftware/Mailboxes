@@ -15,7 +15,7 @@ namespace Mailboxes
 
         public SimpleMailbox(Dispatcher dispatcher) : base(dispatcher) { }
 
-        protected override void DoQueueAction(in MailboxAction action)
+        protected override void DoQueueAction(in MailboxAction action, object? actionContext)
         {
             lock (_actions)
             {

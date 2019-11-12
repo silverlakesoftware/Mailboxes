@@ -56,7 +56,6 @@ namespace Mailboxes
                 {
                     Dispose();
                 }
-
             }
 
             public void Dispose()

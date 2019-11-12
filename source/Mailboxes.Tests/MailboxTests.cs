@@ -1,251 +1,89 @@
-using System;
-using System.Threading;
+﻿// Copyright © 2019, Silverlake Software LLC.  All Rights Reserved.
+// SILVERLAKE SOFTWARE LLC CONFIDENTIAL INFORMATION
+
+// Created by Jamie da Silva on 11/10/2019 9:35 PM
+
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Mailboxes.Tests
 {
-    public abstract class MailboxTests
+    public class MailboxTests
     {
-        readonly ITestOutputHelper _output;
-
-        protected MailboxTests(ITestOutputHelper output)
+        [Fact]
+        public async Task ContextIsPassedToMailbox()
         {
-            _output = output;
+            var mailbox = new ContextTestMailbox();
+
+            await mailbox;
+            await mailbox.WithContext("a");
+            await mailbox;
+
+            Assert.Equal(new[] {"1", "2a", "3"}, mailbox.Contexts);
         }
 
-        protected abstract Mailbox CreateMailbox();
+        [Fact]
+        public async Task TaskContinuationContextIsPassedToMailbox()
+        {
+            var mailbox = new ContextTestMailbox();
+
+            await mailbox;
+            await Task.Delay(1);
+            await Task.Delay(1).ContinueWithContext("a");
+            await Task.Delay(1);
+
+            Assert.Equal(new[] { "1", "2", "3a", "4" }, mailbox.Contexts);
+        }
 
         [Fact]
-        public async Task MailboxIsNotReentrant()
+        public async Task TaskContinuationContextIsPassedToMailboxWithThread()
         {
-            int check = 0;
-            var sut = CreateMailbox();
+            var mailbox = new ContextTestMailbox();
 
-            using var mre1 = new ManualResetEventSlim();
-            var tcs1 = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-            var tcs2 = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            await mailbox;
+            await Task.Run(() => { });
+            await Task.Run(() => { }).ContinueWithContext("a");
+            await Task.Run(() => { });
 
-            _ = Task.Run(() => Test(tcs1));
-            _ = Task.Run(() => Test(tcs2));
-            mre1.Set();
+            Assert.Equal(new[] { "1", "2", "3a", "4" }, mailbox.Contexts);
+        }
 
-            void Test(TaskCompletionSource<bool> tcs)
+        [Fact]
+        public async Task TaskContinuationContextIsPassedToMailboxWithNestedContext()
+        {
+            var mailbox = new ContextTestMailbox();
+
+            await mailbox;
+            await Task.Run(() => { });
+            await Task.Run(async () =>
             {
-                sut.Execute(() =>
+                await mailbox;
+                await Task.Run(() => { return true; }).ContinueWithContext("b");
+                return true;
+            }).ContinueWithContext("a");
+            await Task.Run(() => { });
+
+            Assert.Equal(new[] { "1", "2", "3", "4b", "5a", "6"}, mailbox.Contexts);
+        }
+
+        class ContextTestMailbox : SimpleMailbox
+        {
+            readonly List<string> _contexts = new List<string>();
+            int _nextActionIndex;
+
+            protected override void DoQueueAction(in MailboxAction action, object? actionContext)
+            {
+                lock (_contexts)
                 {
-                    var result = Interlocked.Increment(ref check);
-                    Assert.Equal(1, result);
-                    mre1.Wait();
-                    Interlocked.Decrement(ref check);
-                    tcs.SetResult(true);
-                });
-            }
-
-            await Task.WhenAll(tcs1.Task, tcs2.Task);
-        }
-
-        [Fact]
-        public async Task MailboxIsNotReentrantUnderStress()
-        {
-            int check = 0;
-            var sut = CreateMailbox();
-
-            const int concurrency = 10000;
-            var tasks = new Task[concurrency];
-
-            Parallel.For(0, concurrency, i =>
-            {
-                var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-                tasks[i] = tcs.Task;
-
-                Test(tcs);
-            });
-
-            void Test(TaskCompletionSource<bool> tcs)
-            {
-                sut.Execute(() =>
-                {
-                    var result = Interlocked.Increment(ref check);
-                    Assert.Equal(1, result);
-                    Thread.SpinWait(5);
-                    Interlocked.Decrement(ref check);
-                    tcs.SetResult(true);
-                });
-            }
-
-            await Task.WhenAll(tasks);
-        }
-
-        [Fact]
-        public async Task CancellationWaitsForMessage()
-        {
-            var sut = CreateMailbox();
-
-            using var cts = new CancellationTokenSource();
-            using var mre1 = new ManualResetEventSlim();
-            using var mre2 = new ManualResetEventSlim();
-
-            var test = Test(cts.Token);
-            mre2.Wait();
-            cts.Cancel();
-            Assert.True(cts.Token.IsCancellationRequested);
-            mre1.Set();
-            await test;
-
-            async Task Test(CancellationToken ct)
-            {
-                await sut.Include(ref ct);
-                mre2.Set();
-                mre1.Wait();
-                Assert.False(ct.IsCancellationRequested);
-                await Task.Run(() =>
-                {
-                    while (!ct.IsCancellationRequested)
-                        Thread.Sleep(1);
-                });
-                Assert.True(ct.IsCancellationRequested);
-            }
-        }
-
-        [Fact]
-        public async Task MailboxStopsProcessingMessagesOnStop()
-        {
-            var sut = CreateMailbox();
-
-            using var mre1 = new ManualResetEventSlim();
-            using var mre2 = new ManualResetEventSlim();
-            bool actionExecuted = false;
-
-            sut.Execute(() =>
-            {
-                mre1.Set();
-                mre2.Wait();
-            });
-            mre1.Wait();
-            sut.Execute(() => { actionExecuted = true; });
-            var stopTask = sut.StopAsync();
-            mre2.Set();
-            await stopTask;
-            Assert.False(actionExecuted);
-        }
-
-        [Fact]
-        public async Task StoppedMailboxDoesNotStart()
-        {
-            var sut = CreateMailbox();
-            var stopTask = sut.StopAsync();
-
-            bool actionExecuted = false;
-            sut.Execute(() => { actionExecuted = true; });
-            await stopTask;
-            Assert.False(actionExecuted);
-        }
-
-        [Fact]
-        public async Task StopWorksUnderStress()
-        {
-            const int msgCount = 1000;
-            int minCounter = int.MaxValue;
-            int maxCounter = 0;
-
-            for (int r = 0; r < 100; ++r)
-            {
-                var sut = CreateMailbox();
-
-                using var mre1 = new ManualResetEventSlim();
-                int counter = 0;
-                bool stopSending = false;
-
-                var sendTask = Task.Run(() =>
-                {
-                    for (int i = 0; i < msgCount && !stopSending; ++i)
-                    {
-                        sut.Execute(Test);
-                    }
-                });
-
-                mre1.Wait();
-                await sut.StopAsync();
-
-                // Confirm we eventual stop
-                var tempCounter = counter;
-                Assert.True(tempCounter < msgCount);
-                minCounter = Math.Min(minCounter, tempCounter);
-                maxCounter = Math.Max(maxCounter, tempCounter);
-
-                // Confirm this is stable
-                Thread.Sleep(1);
-                Assert.True(counter==tempCounter);
-
-                // Stop sending and let this wrap up
-                stopSending = true;
-                await sendTask;
-
-                void Test()
-                {
-                    sut.Execute(() =>
-                    {
-                        Interlocked.Increment(ref counter);
-                        if (counter==3)
-                        {
-                            mre1.Set();
-                        }
-
-                        Thread.Yield();
-                    });
+                    var actionIndex = ++_nextActionIndex;
+                    _contexts.Add(actionIndex.ToString() + (actionContext as string ?? ""));
                 }
+
+                base.DoQueueAction(action, actionContext);
             }
 
-            _output.WriteLine($"Range = [{minCounter},{maxCounter}]");
-        }
-
-        [Fact]
-        public void AsyncLocalFlowsCorrectlyUsingAwait()
-        {
-            var sut = CreateMailbox();
-
-            using var mre1 = new ManualResetEventSlim();
-
-            var target = new AsyncLocal<int>();
-            target.Value = 1;
-
-            Test();
-
-            async void Test()
-            {
-                Assert.Equal(1, target.Value);
-                await sut;
-                Assert.Equal(1, target.Value);
-                
-                mre1.Set();
-            }
-
-            mre1.Wait();
-            Assert.Equal(1, target.Value);
-        }
-
-        [Fact]
-        public void AsyncLocalFlowsCorrectlyUsingExecute()
-        {
-            var sut = CreateMailbox();
-
-            using var mre1 = new ManualResetEventSlim();
-
-            var target = new AsyncLocal<int>();
-            target.Value = 1;
-
-            sut.Execute(Test);
-
-            void Test()
-            {
-                Assert.Equal(1, target.Value);
-                mre1.Set();
-            }
-
-            mre1.Wait();
-            Assert.Equal(1, target.Value);
+            public List<string> Contexts => _contexts;
         }
     }
 }

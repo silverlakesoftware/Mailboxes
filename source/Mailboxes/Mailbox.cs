@@ -26,21 +26,18 @@ namespace Mailboxes
         protected Dispatcher _dispatcher;
         TaskCompletionSource<bool>? _stopTcs;
 
-        protected Mailbox()
-        {
-            _awaiter = new MailboxAwaiter(this);
-            _dispatcher = ThreadPoolDispatcher.Default;
-            SyncContext = new MailboxSynchronizationContext(this);
-        }
+        protected Mailbox() : this(null) { }
 
-        protected Mailbox(Dispatcher dispatcher)
+        protected Mailbox(Dispatcher? dispatcher)
         {
             _awaiter = new MailboxAwaiter(this);
-            _dispatcher = dispatcher;
+            _dispatcher = dispatcher ?? ThreadPoolDispatcher.Default;
             SyncContext = new MailboxSynchronizationContext(this);
         }
 
         internal MailboxSynchronizationContext SyncContext { get; }
+
+        internal static Mailbox? Current => (SynchronizationContext.Current as MailboxSynchronizationContext)?.Mailbox;
 
         public Dispatcher Dispatcher => _dispatcher;
 
@@ -49,15 +46,17 @@ namespace Mailboxes
         public bool IsRunning => _runState==RunStateRunning;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Execute(Action action)
+        public void Execute(Action action, object? actionContext = null)
         {
-            QueueAction(new MailboxAction(a => (a as Action)?.Invoke(), action));
+            QueueAction(new MailboxAction(a => (a as Action)?.Invoke(), action), actionContext);
         }
 
         public ref readonly MailboxAwaiter GetAwaiter() => ref _awaiter;
 
+        public MailboxAwaiterWithState WithContext(object actionContext) => new MailboxAwaiterWithState(this, actionContext);
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal void QueueAction(in MailboxAction action)
+        internal void QueueAction(in MailboxAction action, object? actionContext)
         {
             // If the mailbox is stopped, ignore new actions.  In the future we'll probably have an event to
             // trigger for Actor support.
@@ -66,7 +65,7 @@ namespace Mailboxes
                 return;
             }
 
-            DoQueueAction(action);
+            DoQueueAction(action, actionContext);
 
             // If we're idle, let's dispatch an action.  We have to check the Status after the item is queued
             // to play nice with TryContinueRunning.
@@ -76,7 +75,7 @@ namespace Mailboxes
             }
         }
 
-        protected abstract void DoQueueAction(in MailboxAction action);
+        protected abstract void DoQueueAction(in MailboxAction action, object? actionContext);
 
         internal abstract bool IsEmpty { get; }
 
@@ -159,10 +158,10 @@ namespace Mailboxes
 
         protected internal abstract void OnStop();
 
-        public Mailbox Include(ref CancellationToken ct)
+        public Mailbox Include(ref CancellationToken ct, object? actionState = null)
         {
             var cts = new CancellationTokenSource();
-            ct.Register(() => QueueAction(new MailboxAction(DoCancel, cts)));
+            ct.Register(() => QueueAction(new MailboxAction(DoCancel, cts), actionState));
             ct = cts.Token;
             return this;
 
@@ -182,7 +181,30 @@ namespace Mailboxes
 
             public void OnCompleted(Action continuation)
             {
-                _mailbox.QueueAction(new MailboxAction(a => (a as Action)?.Invoke(), continuation));
+                _mailbox.QueueAction(new MailboxAction(a => (a as Action)?.Invoke(), continuation), null);
+            }
+
+            public void GetResult() { }
+        }
+
+        public readonly struct MailboxAwaiterWithState : INotifyCompletion
+        {
+            readonly Mailbox _mailbox;
+            readonly object _actionContext;
+
+            public MailboxAwaiterWithState(Mailbox mailbox, object actionContext)
+            {
+                _mailbox = mailbox;
+                _actionContext = actionContext;
+            }
+
+            public MailboxAwaiterWithState GetAwaiter() => this;
+
+            public bool IsCompleted => false;
+
+            public void OnCompleted(Action continuation)
+            {
+                _mailbox.QueueAction(new MailboxAction(a => (a as Action)?.Invoke(), continuation), _actionContext);
             }
 
             public void GetResult() { }
@@ -195,9 +217,14 @@ namespace Mailboxes
 
             public MailboxSynchronizationContext(Mailbox mailbox) => _mailbox = mailbox;
 
+            internal Mailbox Mailbox => _mailbox;
+
             public override SynchronizationContext CreateCopy() => this;
 
-            public override void Post(SendOrPostCallback d, object? state) => _mailbox.QueueAction(new MailboxAction(d, state));
+            public override void Post(SendOrPostCallback d, object? state)
+            {
+                _mailbox.QueueAction(new MailboxAction(d, state), null);
+            }
 
             public override void Send(SendOrPostCallback d, object? state) => throw new NotImplementedException();
         }
