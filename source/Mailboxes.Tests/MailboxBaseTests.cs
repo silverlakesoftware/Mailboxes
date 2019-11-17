@@ -6,9 +6,11 @@ using Xunit.Abstractions;
 
 namespace Mailboxes.Tests
 {
-    public abstract class MailboxBaseTests
+    public abstract class MailboxBaseTests : Mailbox.IEventHandler
     {
         readonly ITestOutputHelper _output;
+
+        protected Action<Exception>? OnException { get; set; }
 
         protected MailboxBaseTests(ITestOutputHelper output)
         {
@@ -218,7 +220,16 @@ namespace Mailboxes.Tests
                 Assert.Equal(1, target.Value);
                 await sut;
                 Assert.Equal(1, target.Value);
-                
+                target.Value = 2;
+                await InnerTest();
+                Assert.Equal(2, target.Value);
+            }
+
+            async Task InnerTest()
+            {
+                Assert.Equal(2, target.Value);
+                await sut;
+                Assert.Equal(2, target.Value);
                 mre1.Set();
             }
 
@@ -241,11 +252,221 @@ namespace Mailboxes.Tests
             void Test()
             {
                 Assert.Equal(1, target.Value);
+                target.Value = 2;
+                sut.Execute(InnerTest);
+            }
+
+            void InnerTest()
+            {
+                Assert.Equal(2, target.Value);
                 mre1.Set();
             }
 
             mre1.Wait();
             Assert.Equal(1, target.Value);
         }
+
+        [Fact]
+        public void StopsAfterExceptionFromExecute()
+        {
+            var sut = CreateMailbox();
+            sut.EventHandler = this;
+            using var mre = new ManualResetEventSlim();
+            OnException = ex => sut.StopAsync();
+
+            sut.Execute(() => throw new System.Exception("Boom."));
+            sut.Execute(() => mre.Set());
+
+            Assert.False(mre.Wait(25));
+        }
+
+        /// <summary>
+        /// This test is to demonstrate that calling an async void is OK, but awaiting a mailbox
+        /// in an async void method is NOT OK.
+        /// </summary>
+        [Fact]
+        public void StopsAfterExceptionFromInnerAsyncVoid()
+        {
+            var sut = CreateMailbox();
+            sut.EventHandler = this;
+            using var mre = new ManualResetEventSlim();
+            OnException = ex => sut.StopAsync();
+
+            async Task Test()
+            {
+                await sut;
+                InnerTest();
+            }
+
+            async void InnerTest()
+            {
+                // Note that this exception will be queued up to be thrown as an individual action
+                // https://github.com/dotnet/corefx/blob/3c30e11dbc7c381aa89648d06048766026eed96e/src/Common/src/CoreLib/System/Runtime/CompilerServices/AsyncVoidMethodBuilder.cs#L116
+                throw new Exception("Boom");
+            }
+
+            Assert.ThrowsAsync<Exception>(Test);
+       }
+
+        [Fact]
+        public void ContinuesAfterException()
+        {
+            var sut = CreateMailbox();
+            sut.EventHandler = this;
+            using var mre = new ManualResetEventSlim();
+
+            sut.Execute(() => throw new Exception("Boom."));
+            sut.Execute(() => mre.Set());
+
+            Assert.True(mre.Wait(25));
+        }
+
+        [Fact]
+        public void TaskFromExecuteAsyncCompletes()
+        {
+            var sut = CreateMailbox();
+            sut.EventHandler = this;
+            using var mre = new ManualResetEventSlim();
+            var exception = default(Exception);
+            OnException = ex => exception = ex;
+
+            var task = sut.ExecuteAsync(async () =>
+            {
+                await Task.Delay(0);
+            });
+
+            task.ContinueWith(_ => mre.Set());
+
+            mre.Wait();
+            Assert.Null(exception);
+            Assert.True(task.IsCompletedSuccessfully);
+        }
+
+        [Fact]
+        public void TaskFromExecuteAsyncFaults()
+        {
+            var sut = CreateMailbox();
+            sut.EventHandler = this;
+            using var mre = new ManualResetEventSlim();
+            var exception = default(Exception);
+            OnException = ex => exception = ex;
+
+            var task = sut.ExecuteAsync(async () =>
+            {
+                await Task.Delay(0);
+                throw new Exception("Boom.");
+            });
+
+            task.ContinueWith(_ => mre.Set());
+
+            mre.Wait();
+            Assert.Null(exception);
+            Assert.True(task.IsFaulted);
+            Assert.NotNull(task.Exception);
+            Assert.IsType<Exception>(task.Exception?.InnerException);
+        }
+
+        [Fact]
+        public void TaskFromExecuteAsyncCancels()
+        {
+            var sut = CreateMailbox();
+            sut.EventHandler = this;
+            using var mre = new ManualResetEventSlim();
+            var exception = default(Exception);
+            OnException = ex => exception = ex;
+
+            var task = sut.ExecuteAsync(async () =>
+            {
+                await Task.Delay(0);
+                throw new OperationCanceledException();
+            });
+
+            task.ContinueWith(_ => mre.Set());
+
+            mre.Wait();
+            Assert.Null(exception);
+            Assert.True(task.IsCanceled);
+        }
+
+        [Fact]
+        public void TaskFromExecuteAsyncOfTCompletes()
+        {
+            var sut = CreateMailbox();
+            sut.EventHandler = this;
+            using var mre = new ManualResetEventSlim();
+            var exception = default(Exception);
+            OnException = ex => exception = ex;
+
+            var task = sut.ExecuteAsync(async () =>
+            {
+                await Task.Delay(0);
+                return 1;
+            });
+
+            task.ContinueWith(_ => mre.Set());
+
+            mre.Wait();
+            Assert.Null(exception);
+            Assert.True(task.IsCompletedSuccessfully);
+            Assert.Equal(1, task.Result);
+        }
+
+        [Fact]
+        public void TaskFromExecuteAsyncOfTFaults()
+        {
+            var sut = CreateMailbox();
+            sut.EventHandler = this;
+            using var mre = new ManualResetEventSlim();
+            var exception = default(Exception);
+            OnException = ex => exception = ex;
+
+            var task = sut.ExecuteAsync(async () =>
+            {
+                await Task.Delay(0);
+                throw new Exception("Boom.");
+#pragma warning disable 162
+                return 1;
+#pragma warning restore 162
+            });
+
+            task.ContinueWith(_ => mre.Set());
+
+            mre.Wait();
+            Assert.Null(exception);
+            Assert.True(task.IsFaulted);
+            Assert.NotNull(task.Exception);
+            Assert.IsType<Exception>(task.Exception?.InnerException);
+        }
+
+        [Fact]
+        public void TaskFromExecuteAsyncOfTCancels()
+        {
+            var sut = CreateMailbox();
+            sut.EventHandler = this;
+            using var mre = new ManualResetEventSlim();
+            var exception = default(Exception);
+            OnException = ex => exception = ex;
+
+            var task = sut.ExecuteAsync(async () =>
+            {
+                await Task.Delay(0);
+                throw new OperationCanceledException();
+#pragma warning disable 162
+                return 1;
+#pragma warning restore 162
+            });
+
+            task.ContinueWith(_ => mre.Set());
+
+            mre.Wait();
+            Assert.Null(exception);
+            Assert.True(task.IsCanceled);
+        }
+
+        void Mailbox.IEventHandler.OnException(Exception ex)
+        {
+            OnException?.Invoke(ex);
+        }
+
     }
 }

@@ -45,10 +45,64 @@ namespace Mailboxes
 
         public bool IsRunning => _runState==RunStateRunning;
 
+        public IEventHandler EventHandler { get; set; }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Execute(Action action, object? actionContext = null)
         {
             QueueAction(new MailboxAction(a => (a as Action)?.Invoke(), action), actionContext);
+        }
+
+        public Task ExecuteAsync(Func<Task> action, object? actionContext = null)
+        {
+            var tcs = new TaskCompletionSource<VoidResult>();
+            QueueAction(new MailboxAction(a => ExecuteAsyncAction((a as Func<Task>)!, tcs), action), actionContext);
+            return tcs.Task;
+        }
+
+        public Task<T> ExecuteAsync<T>(Func<Task<T>> action, object? actionContext = null)
+        {
+            var tcs = new TaskCompletionSource<T>();
+            QueueAction(new MailboxAction(a => ExecuteAsyncAction((a as Func<Task<T>>)!, tcs), action), actionContext);
+            return tcs.Task;
+        }
+
+        void ExecuteAsyncAction(Func<Task> action, TaskCompletionSource<VoidResult> tcs)
+        {
+            action().ContinueWith(t =>
+            {
+                switch (t.Status)
+                {
+                    case TaskStatus.Canceled:
+                        tcs.SetCanceled();
+                        break;
+                    case TaskStatus.Faulted:
+                        tcs.SetException(t.Exception!.InnerException!);
+                        break;
+                    case TaskStatus.RanToCompletion:
+                        tcs.SetResult(new VoidResult());
+                        break;
+                }
+            });
+        }
+
+        void ExecuteAsyncAction<T>(Func<Task<T>> action, TaskCompletionSource<T> tcs)
+        {
+            action().ContinueWith(t =>
+            {
+                switch (t.Status)
+                {
+                    case TaskStatus.Canceled:
+                        tcs.SetCanceled();
+                        break;
+                    case TaskStatus.Faulted:
+                        tcs.SetException(t.Exception!.InnerException!);
+                        break;
+                    case TaskStatus.RanToCompletion:
+                        tcs.SetResult(t.Result);
+                        break;
+                }
+            });
         }
 
         public ref readonly MailboxAwaiter GetAwaiter() => ref _awaiter;
@@ -146,6 +200,17 @@ namespace Mailboxes
             }
         }
 
+        /// <summary>
+        /// Called from a <see cref="Dispatcher"/> when an unhandled exception occurs when processing an action.
+        /// </summary>
+        /// <param name="ex">The exception</param>
+        /// <returns>true to continue (i.e. call <see cref="TryContinueRunning"/>, false if the mailbox is stopped.</returns>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal void HandleException(Exception ex)
+        {
+            EventHandler?.OnException(ex);
+        }
+
         void Stopped()
         {
             // The problem is that an item can be queued and it will transition to running and then transition back to idle
@@ -227,6 +292,14 @@ namespace Mailboxes
             }
 
             public override void Send(SendOrPostCallback d, object? state) => throw new NotImplementedException();
+        }
+
+        private struct VoidResult { };
+
+
+        public interface IEventHandler
+        {
+            void OnException(Exception ex);
         }
     }
 }

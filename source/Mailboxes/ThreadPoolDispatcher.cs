@@ -36,20 +36,27 @@ namespace Mailboxes
             var oldSyncContext = SynchronizationContext.Current;
             SynchronizationContext.SetSynchronizationContext(mailbox.SyncContext);
 
-            action.Action(action.State);
-
-            var executionUnits = _executionUnits - 1;
-            for (int i = 0; i < executionUnits; ++i)
+            try
             {
-                action = mailbox.DequeueAction();
-                if (action.Action!=null)
+                action.Action(action.State);
+
+                var executionUnits = _executionUnits - 1;
+                for (int i = 0; i < executionUnits; ++i)
                 {
-                    action.Action(action.State);
+                    action = mailbox.DequeueAction();
+                    if (action.Action!=null)
+                    {
+                        action.Action(action.State);
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
-                else
-                {
-                    break;
-                }
+            }
+            catch (Exception ex)
+            {
+                mailbox.HandleException(ex);
             }
 
             SynchronizationContext.SetSynchronizationContext(oldSyncContext);
