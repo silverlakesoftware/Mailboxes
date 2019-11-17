@@ -54,7 +54,7 @@ namespace Mailboxes.Tests
             });
             mre.Wait();
             var offset = fired - start;
-            Assert.True(offset.TotalMilliseconds > 1 && offset.TotalMilliseconds < (1 + TimerRange));
+            Assert.True(offset.TotalMilliseconds > 1 && offset.TotalMilliseconds < (2 * TimerRange));
         }
 
         [Fact]
@@ -62,12 +62,10 @@ namespace Mailboxes.Tests
         {
             var sut = CreateScheduler();
             var start = sut.Now;
-            var threadId = Thread.CurrentThread.ManagedThreadId;
             await sut.Delay(1).ConfigureAwait(false);
-            Assert.NotEqual(threadId, Thread.CurrentThread.ManagedThreadId);
             var fired = sut.Now;
             var offset = fired - start;
-            Assert.True(offset.TotalMilliseconds > 1 && offset.TotalMilliseconds < (1 + TimerRange));
+            Assert.True(offset.TotalMilliseconds > 1 && offset.TotalMilliseconds < (2 * TimerRange));
         }
 
         [Fact]
