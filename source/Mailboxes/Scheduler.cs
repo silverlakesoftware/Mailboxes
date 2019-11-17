@@ -49,7 +49,7 @@ namespace Mailboxes
             }
 
             var taskCompletionSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-            ct.Register(tcs => (tcs as TaskCompletionSource<bool>)!.TrySetCanceled(ct), taskCompletionSource);
+            ct.Register(tcs => ((TaskCompletionSource<bool>)tcs!).TrySetCanceled(ct), taskCompletionSource);
             DoSchedule(timeSpanMs, taskCompletionSource, tcs => tcs.TrySetResult(true), ct);
             return taskCompletionSource.Task;
         }

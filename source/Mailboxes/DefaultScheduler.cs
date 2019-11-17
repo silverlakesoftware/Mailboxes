@@ -19,7 +19,7 @@ namespace Mailboxes
 
         abstract class TimerAction
         {
-            internal static void ExecuteCallback(object o) => (o as TimerAction)!.Execute();
+            internal static void ExecuteCallback(object? o) => ((TimerAction)o!).Execute();
 
             protected internal abstract void Execute();
         }

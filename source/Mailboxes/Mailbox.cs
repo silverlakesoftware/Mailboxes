@@ -50,20 +50,20 @@ namespace Mailboxes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Execute(Action action, object? actionContext = null)
         {
-            QueueAction(new MailboxAction(a => (a as Action)?.Invoke(), action), actionContext);
+            QueueAction(new MailboxAction(a => ((Action)a!).Invoke(), action), actionContext);
         }
 
         public Task ExecuteAsync(Func<Task> action, object? actionContext = null)
         {
             var tcs = new TaskCompletionSource<VoidResult>();
-            QueueAction(new MailboxAction(a => ExecuteAsyncAction((a as Func<Task>)!, tcs), action), actionContext);
+            QueueAction(new MailboxAction(a => ExecuteAsyncAction((Func<Task>)a!, tcs), action), actionContext);
             return tcs.Task;
         }
 
         public Task<T> ExecuteAsync<T>(Func<Task<T>> action, object? actionContext = null)
         {
             var tcs = new TaskCompletionSource<T>();
-            QueueAction(new MailboxAction(a => ExecuteAsyncAction((a as Func<Task<T>>)!, tcs), action), actionContext);
+            QueueAction(new MailboxAction(a => ExecuteAsyncAction((Func<Task<T>>)a!, tcs), action), actionContext);
             return tcs.Task;
         }
 
@@ -226,11 +226,9 @@ namespace Mailboxes
         public Mailbox Include(ref CancellationToken ct, object? actionState = null)
         {
             var cts = new CancellationTokenSource();
-            ct.Register(() => QueueAction(new MailboxAction(DoCancel, cts), actionState));
+            ct.Register(() => QueueAction(new MailboxAction(state => ((CancellationTokenSource)state!).Cancel(), cts), actionState));
             ct = cts.Token;
             return this;
-
-            static void DoCancel(object? state) => (state as CancellationTokenSource)?.Cancel();
         }
 
         public readonly struct MailboxAwaiter : INotifyCompletion
@@ -246,7 +244,7 @@ namespace Mailboxes
 
             public void OnCompleted(Action continuation)
             {
-                _mailbox.QueueAction(new MailboxAction(a => (a as Action)?.Invoke(), continuation), null);
+                _mailbox.QueueAction(new MailboxAction(a => ((Action)a!).Invoke(), continuation), null);
             }
 
             public void GetResult() { }
@@ -269,7 +267,7 @@ namespace Mailboxes
 
             public void OnCompleted(Action continuation)
             {
-                _mailbox.QueueAction(new MailboxAction(a => (a as Action)?.Invoke(), continuation), _actionContext);
+                _mailbox.QueueAction(new MailboxAction(a => ((Action)a!).Invoke(), continuation), _actionContext);
             }
 
             public void GetResult() { }
