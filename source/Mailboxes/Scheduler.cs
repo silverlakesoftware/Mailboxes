@@ -1,7 +1,5 @@
-﻿// Copyright © 2019, Silverlake Software LLC.  All Rights Reserved.
-// SILVERLAKE SOFTWARE LLC CONFIDENTIAL INFORMATION
-
-// Created by Jamie da Silva on 10/27/2019 12:37 AM
+﻿// Copyright © 2019, Silverlake Software LLC and Contributors (see NOTICES file)
+// SPDX-License-Identifier: Apache-2.0
 
 using System;
 using System.Threading;
@@ -23,7 +21,7 @@ namespace Mailboxes
                 return;
             }
 
-            if (timeSpanMs==0)
+            if (timeSpanMs == 0)
             {
                 action(state);
                 return;

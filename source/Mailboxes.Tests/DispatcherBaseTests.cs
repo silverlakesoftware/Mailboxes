@@ -1,7 +1,5 @@
-﻿// Copyright © 2019, Silverlake Software LLC.  All Rights Reserved.
-// SILVERLAKE SOFTWARE LLC CONFIDENTIAL INFORMATION
-
-// Created by Jamie da Silva on 11/16/2019 8:18 PM
+﻿// Copyright © 2019, Silverlake Software LLC and Contributors (see NOTICES file)
+// SPDX-License-Identifier: Apache-2.0
 
 using System;
 using System.Threading;
@@ -41,7 +39,7 @@ namespace Mailboxes.Tests
         public void MailboxStopsAfterException()
         {
             var sut = CreateDispatcher();
-            var mailbox = new SimpleMailbox(sut) { EventHandler = this };
+            var mailbox = new SimpleMailbox(sut) {EventHandler = this};
             using var mre = new ManualResetEventSlim();
             OnException = ex => mailbox.StopAsync();
 
@@ -55,7 +53,7 @@ namespace Mailboxes.Tests
         public void MailboxContinuesAfterException()
         {
             var sut = CreateDispatcher();
-            var mailbox = new SimpleMailbox(sut) { EventHandler = this };
+            var mailbox = new SimpleMailbox(sut) {EventHandler = this};
             using var mre = new ManualResetEventSlim();
 
             mailbox.Execute(() => throw new System.Exception("Boom."));

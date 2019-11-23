@@ -1,7 +1,5 @@
-﻿// Copyright © 2019, Silverlake Software LLC.  All Rights Reserved.
-// SILVERLAKE SOFTWARE LLC CONFIDENTIAL INFORMATION
-
-// Created by Jamie da Silva on 9/29/2019 1:59 PM
+﻿// Copyright © 2019, Silverlake Software LLC and Contributors (see NOTICES file)
+// SPDX-License-Identifier: Apache-2.0
 
 using System;
 using System.Threading;
@@ -27,7 +25,7 @@ namespace Mailboxes
         public void WorkItemCallback(Mailbox mailbox)
         {
             var action = mailbox.DequeueAction();
-            if (action.Action==null)
+            if (action.Action == null)
             {
                 mailbox.TryContinueRunning();
                 return;
@@ -44,7 +42,7 @@ namespace Mailboxes
                 for (int i = 0; i < executionUnits; ++i)
                 {
                     action = mailbox.DequeueAction();
-                    if (action.Action!=null)
+                    if (action.Action != null)
                     {
                         action.Action(action.State);
                     }

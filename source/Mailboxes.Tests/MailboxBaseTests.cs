@@ -1,3 +1,6 @@
+// Copyright © 2019, Silverlake Software LLC and Contributors (see NOTICES file)
+// SPDX-License-Identifier: Apache-2.0
+
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -179,7 +182,7 @@ namespace Mailboxes.Tests
 
                 // Confirm this is stable
                 Thread.Sleep(1);
-                Assert.True(counter==tempCounter);
+                Assert.True(counter == tempCounter);
 
                 // Stop sending and let this wrap up
                 stopSending = true;
@@ -190,7 +193,7 @@ namespace Mailboxes.Tests
                     sut.Execute(() =>
                     {
                         Interlocked.Increment(ref counter);
-                        if (counter==3)
+                        if (counter == 3)
                         {
                             mre1.Set();
                         }
@@ -306,7 +309,7 @@ namespace Mailboxes.Tests
             }
 
             Assert.ThrowsAsync<Exception>(Test);
-       }
+        }
 
         [Fact]
         public void ContinuesAfterException()
@@ -330,10 +333,7 @@ namespace Mailboxes.Tests
             var exception = default(Exception);
             OnException = ex => exception = ex;
 
-            var task = sut.ExecuteAsync(async () =>
-            {
-                await Task.Delay(0);
-            });
+            var task = sut.ExecuteAsync(async () => { await Task.Delay(0); });
 
             task.ContinueWith(_ => mre.Set());
 
@@ -467,6 +467,5 @@ namespace Mailboxes.Tests
         {
             OnException?.Invoke(ex);
         }
-
     }
 }

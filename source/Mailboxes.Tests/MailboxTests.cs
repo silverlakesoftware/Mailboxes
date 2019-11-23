@@ -1,7 +1,5 @@
-﻿// Copyright © 2019, Silverlake Software LLC.  All Rights Reserved.
-// SILVERLAKE SOFTWARE LLC CONFIDENTIAL INFORMATION
-
-// Created by Jamie da Silva on 11/10/2019 9:35 PM
+﻿// Copyright © 2019, Silverlake Software LLC and Contributors (see NOTICES file)
+// SPDX-License-Identifier: Apache-2.0
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -33,7 +31,7 @@ namespace Mailboxes.Tests
             await Task.Delay(1).ContinueWithContext("a");
             await Task.Delay(1);
 
-            Assert.Equal(new[] { "1", "2", "3a", "4" }, mailbox.Contexts);
+            Assert.Equal(new[] {"1", "2", "3a", "4"}, mailbox.Contexts);
         }
 
         [Fact]
@@ -46,7 +44,7 @@ namespace Mailboxes.Tests
             await Task.Run(() => { }).ContinueWithContext("a");
             await Task.Run(() => { });
 
-            Assert.Equal(new[] { "1", "2", "3a", "4" }, mailbox.Contexts);
+            Assert.Equal(new[] {"1", "2", "3a", "4"}, mailbox.Contexts);
         }
 
         [Fact]
@@ -64,7 +62,7 @@ namespace Mailboxes.Tests
             }).ContinueWithContext("a");
             await Task.Run(() => { });
 
-            Assert.Equal(new[] { "1", "2", "3", "4b", "5a", "6"}, mailbox.Contexts);
+            Assert.Equal(new[] {"1", "2", "3", "4b", "5a", "6"}, mailbox.Contexts);
         }
 
         class ContextTestMailbox : SimpleMailbox

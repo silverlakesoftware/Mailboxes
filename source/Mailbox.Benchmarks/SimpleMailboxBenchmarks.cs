@@ -1,7 +1,5 @@
-﻿// Copyright © 2019, Silverlake Software LLC.  All Rights Reserved.
-// SILVERLAKE SOFTWARE LLC CONFIDENTIAL INFORMATION
-
-// Created by Jamie da Silva on 9/23/2019 12:03 AM
+﻿// Copyright © 2019, Silverlake Software LLC and Contributors (see NOTICES file)
+// SPDX-License-Identifier: Apache-2.0
 
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
@@ -13,8 +11,8 @@ namespace Mailboxes.Benchmarks
     {
         static Mailbox CreateMailbox() => new ConcurrentMailbox();
 
-    //        [Benchmark]
-    //        public Mailbox Create() => new SimpleMailbox();
+        //        [Benchmark]
+        //        public Mailbox Create() => new SimpleMailbox();
 
         [Benchmark]
         public Task<int> CreateAndOneCall()
@@ -81,7 +79,7 @@ namespace Mailboxes.Benchmarks
             {
                 await mailbox;
                 ++value;
-                if (value==1000)
+                if (value == 1000)
                 {
                     tcs.SetResult(value);
                 }
@@ -101,7 +99,7 @@ namespace Mailboxes.Benchmarks
 
             Parallel.For(0, 1000, i =>
             {
-                if (i % 2==0)
+                if (i % 2 == 0)
                     DoIncrement1(i);
                 else
                     DoIncrement2(i);

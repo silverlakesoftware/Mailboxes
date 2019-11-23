@@ -1,7 +1,5 @@
-﻿// Copyright © 2019, Silverlake Software LLC.  All Rights Reserved.
-// SILVERLAKE SOFTWARE LLC CONFIDENTIAL INFORMATION
-
-// Created by Jamie da Silva on 10/13/2019 3:01 PM
+﻿// Copyright © 2019, Silverlake Software LLC and Contributors (see NOTICES file)
+// SPDX-License-Identifier: Apache-2.0
 
 using System.Collections.Generic;
 using System.Threading;
@@ -109,7 +107,7 @@ namespace Mailboxes.Tests
 
             var task2 = Task.Run(async () =>
             {
-                await sut; 
+                await sut;
                 await Task.Delay(1).ContinueWithContext("b");
                 executedStepB = true;
                 Assert.True(executedStepA);
@@ -136,6 +134,5 @@ namespace Mailboxes.Tests
         {
             public int Compare(object? x, object? y) => string.CompareOrdinal(x as string, y as string);
         }
-
     }
 }

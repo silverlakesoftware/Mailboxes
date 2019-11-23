@@ -1,0 +1,9 @@
+Several files in ThirdParty.Benchmarks are modified from other projects.  These files are not part
+of any of the distribution package for the Mailboxes project.  These files are attributed in the
+comment header.
+
+https://github.com/atemerev/skynet 
+Undeclared license
+
+https://github.com/Blind-Striker/actor-model-benchmarks
+Apache 2.0 License

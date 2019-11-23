@@ -1,7 +1,5 @@
-﻿// Copyright © 2019, Silverlake Software LLC.  All Rights Reserved.
-// SILVERLAKE SOFTWARE LLC CONFIDENTIAL INFORMATION
-
-// Created by Jamie da Silva on 11/8/2019 12:49 AM
+﻿// Copyright © 2019, Silverlake Software LLC and Contributors (see NOTICES file)
+// SPDX-License-Identifier: Apache-2.0
 
 using System;
 using System.Runtime.CompilerServices;
@@ -22,7 +20,6 @@ namespace Mailboxes
             readonly Mailbox _mailbox;
             readonly ConfiguredTaskAwaitable.ConfiguredTaskAwaiter _taskAwaiter;
             readonly object _actionContext;
-
 
             public TaskAwaiterWithContext(Task task, object actionContext)
             {

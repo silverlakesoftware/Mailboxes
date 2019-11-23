@@ -1,7 +1,6 @@
-﻿// Copyright © 2019, Silverlake Software LLC.  All Rights Reserved.
-// SILVERLAKE SOFTWARE LLC CONFIDENTIAL INFORMATION
+﻿// From: https://github.com/Blind-Striker/actor-model-benchmarks/blob/master/src/Akka.Net/Akka.Net.Inproc/Program.cs
+// Apache 2 License
 
-// Created by Jamie da Silva on 9/29/2019 10:59 AM
 
 using System;
 using System.Diagnostics;
@@ -21,7 +20,7 @@ namespace ThirdParty.Benchmarks
         [Arguments(100)]
         [Arguments(200)]
         [Arguments(500)]
-        public void AkkaDotNet( int throughput )
+        public void AkkaDotNet(int throughput)
         {
             var mainSystem = ActorSystem.Create("main");
 

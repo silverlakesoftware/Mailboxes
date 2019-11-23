@@ -1,5 +1,5 @@
-﻿// Copyright © 2019, Silverlake Software LLC.  All Rights Reserved.
-// SILVERLAKE SOFTWARE LLC CONFIDENTIAL INFORMATION
+﻿// Copyright © 2019, Silverlake Software LLC and Contributors (see NOTICES file)
+// SPDX-License-Identifier: Apache-2.0
 
 // Created by Jamie da Silva on 9/29/2019 3:41 PM
 
@@ -25,7 +25,7 @@ namespace Mailboxes
         protected override MailboxAction DoDequeueAction()
         {
             var actions = _actions;
-            return actions!=null && actions.TryDequeue(out var result) ? result : new MailboxAction();
+            return actions != null && actions.TryDequeue(out var result) ? result : new MailboxAction();
         }
 
         protected internal override void OnStop()

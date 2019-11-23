@@ -1,7 +1,5 @@
-﻿// Copyright © 2019, Silverlake Software LLC.  All Rights Reserved.
-// SILVERLAKE SOFTWARE LLC CONFIDENTIAL INFORMATION
-
-// Created by Jamie da Silva on 9/29/2019 2:05 PM
+﻿// Copyright © 2019, Silverlake Software LLC and Contributors (see NOTICES file)
+// SPDX-License-Identifier: Apache-2.0
 
 using System;
 using System.Diagnostics;
@@ -41,9 +39,9 @@ namespace Mailboxes
 
         public Dispatcher Dispatcher => _dispatcher;
 
-        public bool IsStopped => _stopState==StopStateYes;
+        public bool IsStopped => _stopState == StopStateYes;
 
-        public bool IsRunning => _runState==RunStateRunning;
+        public bool IsRunning => _runState == RunStateRunning;
 
         public IEventHandler EventHandler { get; set; }
 
@@ -114,7 +112,7 @@ namespace Mailboxes
         {
             // If the mailbox is stopped, ignore new actions.  In the future we'll probably have an event to
             // trigger for Actor support.
-            if (_stopState==StopStateYes)
+            if (_stopState == StopStateYes)
             {
                 return;
             }
@@ -123,7 +121,7 @@ namespace Mailboxes
 
             // If we're idle, let's dispatch an action.  We have to check the Status after the item is queued
             // to play nice with TryContinueRunning.
-            if (_runState==RunStateIdle)
+            if (_runState == RunStateIdle)
             {
                 TryStartRunning();
             }
@@ -134,7 +132,7 @@ namespace Mailboxes
         internal abstract bool IsEmpty { get; }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal MailboxAction DequeueAction() => _stopState==StopStateYes ? new MailboxAction() : DoDequeueAction();
+        internal MailboxAction DequeueAction() => _stopState == StopStateYes ? new MailboxAction() : DoDequeueAction();
 
         protected abstract MailboxAction DoDequeueAction();
 
@@ -142,7 +140,7 @@ namespace Mailboxes
         {
             var runState = _runState;
 
-            if (Interlocked.Exchange(ref _stopState, StopStateYes)==StopStateYes)
+            if (Interlocked.Exchange(ref _stopState, StopStateYes) == StopStateYes)
             {
                 return Task.CompletedTask;
             }
@@ -150,7 +148,7 @@ namespace Mailboxes
             _stopTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             _stopTcs.Task.ContinueWith(_ => OnStop());
 
-            if (runState==RunStateIdle)
+            if (runState == RunStateIdle)
             {
                 Stopped();
                 return Task.CompletedTask;
@@ -162,7 +160,7 @@ namespace Mailboxes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void TryStartRunning()
         {
-            if (Interlocked.Exchange(ref _runState, RunStateRunning)==RunStateRunning)
+            if (Interlocked.Exchange(ref _runState, RunStateRunning) == RunStateRunning)
             {
                 return;
             }
@@ -180,7 +178,7 @@ namespace Mailboxes
             else
             {
                 // If we're already idle, we don't need to do anything
-                if (Interlocked.Exchange(ref _runState, RunStateIdle)==RunStateIdle)
+                if (Interlocked.Exchange(ref _runState, RunStateIdle) == RunStateIdle)
                 {
                     return;
                 }
@@ -216,8 +214,8 @@ namespace Mailboxes
             // The problem is that an item can be queued and it will transition to running and then transition back to idle
             // after Stopped has already been executed.  TrySetResult works here
 
-            SpinWait.SpinUntil(() => _stopTcs!=null);
-            Debug.Assert(_stopTcs!=null, nameof(_stopTcs) + " != null");
+            SpinWait.SpinUntil(() => _stopTcs != null);
+            Debug.Assert(_stopTcs != null, nameof(_stopTcs) + " != null");
             _stopTcs.TrySetResult(true);
         }
 
@@ -293,7 +291,6 @@ namespace Mailboxes
         }
 
         private struct VoidResult { };
-
 
         public interface IEventHandler
         {

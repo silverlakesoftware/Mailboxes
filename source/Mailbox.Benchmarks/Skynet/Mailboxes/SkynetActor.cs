@@ -1,7 +1,5 @@
-﻿// Copyright © 2019, Silverlake Software LLC.  All Rights Reserved.
-// SILVERLAKE SOFTWARE LLC CONFIDENTIAL INFORMATION
-
-// Created by Jamie da Silva on 9/28/2019 9:51 PM
+﻿// Copyright © 2019, Silverlake Software LLC and Contributors (see NOTICES file)
+// SPDX-License-Identifier: Apache-2.0
 
 using System;
 using System.Threading.Tasks;
@@ -26,7 +24,7 @@ namespace Mailboxes.Benchmarks.Skynet.Mailboxes
             //await _mailbox;
             _mailbox.Execute(() =>
             {
-                if (level==1)
+                if (level == 1)
                 {
                     _resultCallback(num);
                     return;
@@ -49,7 +47,7 @@ namespace Mailboxes.Benchmarks.Skynet.Mailboxes
                 _todo -= 1;
                 _count += num;
 
-                if (_todo==0)
+                if (_todo == 0)
                 {
                     _resultCallback(_count);
                 }
@@ -71,5 +69,4 @@ namespace Mailboxes.Benchmarks.Skynet.Mailboxes
             return await tcs.Task;
         }
     }
-
 }

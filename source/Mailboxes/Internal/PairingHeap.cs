@@ -1,13 +1,10 @@
-﻿// Copyright © 2019, Silverlake Software LLC.  All Rights Reserved.
-// SILVERLAKE SOFTWARE LLC CONFIDENTIAL INFORMATION
-
-// Created by Jamie da Silva on 11/9/2019 4:23 PM
+﻿// Copyright © 2019, Silverlake Software LLC and Contributors (see NOTICES file)
+// SPDX-License-Identifier: Apache-2.0
 
 using System.Collections.Generic;
 
 namespace Mailboxes.Internal
 {
-
     public class PairingHeap<T>
     {
         readonly IComparer<T> _comparer;
@@ -23,7 +20,7 @@ namespace Mailboxes.Internal
             _comparer = comparer;
         }
 
-        public bool IsEmpty => _root==null;
+        public bool IsEmpty => _root == null;
 
         public void Clear()
         {
@@ -63,7 +60,7 @@ namespace Mailboxes.Internal
             _root = _root!.TryRemoveMin(_comparer);
         }
 
-        public class Node 
+        public class Node
         {
             readonly T _element;
             List<Node>? _subHeaps;
@@ -72,7 +69,7 @@ namespace Mailboxes.Internal
             {
                 _element = element;
             }
-            
+
             List<Node> EnsuredSubHeaps => _subHeaps ??= new List<Node>();
 
             internal bool TryFindMin(out T element)
@@ -83,13 +80,13 @@ namespace Mailboxes.Internal
 
             internal Node? TryRemoveMin(IComparer<T> comparer)
             {
-                return _subHeaps==null ? null : MergePairs(comparer, _subHeaps);
+                return _subHeaps == null ? null : MergePairs(comparer, _subHeaps);
             }
 
             Node? MergePairs(IComparer<T> comparer, List<Node> list)
             {
                 var odd = list.Count % 2;
-                var result = odd==0 ? null : list[^1];
+                var result = odd == 0 ? null : list[^1];
                 var start = list.Count - odd;
 
                 while (start > 0)
@@ -105,7 +102,7 @@ namespace Mailboxes.Internal
             internal Node Meld(IComparer<T> comparer, Node node)
             {
                 // Check if it's empty
-                if (node==null)
+                if (node == null)
                 {
                     return this;
                 }
@@ -123,5 +120,4 @@ namespace Mailboxes.Internal
             }
         }
     }
-
 }

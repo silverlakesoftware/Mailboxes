@@ -1,7 +1,5 @@
-﻿// Copyright © 2019, Silverlake Software LLC.  All Rights Reserved.
-// SILVERLAKE SOFTWARE LLC CONFIDENTIAL INFORMATION
-
-// Created by Jamie da Silva on 9/29/2019 10:59 AM
+﻿// From: https://github.com/Blind-Striker/actor-model-benchmarks/blob/master/src/Proto.Actor/ProtoActor.Inproc/Program.cs
+// Apache 2 License
 
 using System;
 using System.Diagnostics;
@@ -24,15 +22,14 @@ namespace ThirdParty.Benchmarks
         {
             int messageCount = 1000000;
             int batchSize = 100;
-            const bool useBoundedMailbox = true; 
-            var d = new ThreadPoolDispatcher { Throughput = throughput };
+            const bool useBoundedMailbox = true;
+            var d = new ThreadPoolDispatcher {Throughput = throughput};
 
             var context = new RootContext();
             var clientCount = Environment.ProcessorCount * 2;
             var clients = new PID[clientCount];
             var echos = new PID[clientCount];
             var completions = new TaskCompletionSource<bool>[clientCount];
-
 
             var echoProps = Props.FromProducer(() => new EchoActor())
                 .WithDispatcher(d)
@@ -49,6 +46,7 @@ namespace ThirdParty.Benchmarks
                 clients[i] = context.Spawn(clientProps);
                 echos[i] = context.Spawn(echoProps);
             }
+
             var tasks = completions.Select(tsc => tsc.Task).ToArray();
             var sw = Stopwatch.StartNew();
             for (var i = 0; i < clientCount; i++)
@@ -58,6 +56,7 @@ namespace ThirdParty.Benchmarks
 
                 context.Send(client, new Start(echo));
             }
+
             Task.WaitAll(tasks);
 
             sw.Stop();

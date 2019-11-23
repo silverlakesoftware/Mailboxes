@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright © 2019, Silverlake Software LLC and Contributors (see NOTICES file)
+// SPDX-License-Identifier: Apache-2.0
+
+using System;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Threading;
@@ -13,8 +16,6 @@ namespace Mailboxes.Example
         public static async Task Main(string[] args)
         {
             Console.WriteLine("Hello World!");
-
-            var mailbox = new ConcurrentMailbox();
 
             await TestA();
 

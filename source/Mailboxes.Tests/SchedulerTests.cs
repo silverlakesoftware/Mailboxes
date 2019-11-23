@@ -1,5 +1,5 @@
-﻿// Copyright © 2019, Silverlake Software LLC.  All Rights Reserved.
-// SILVERLAKE SOFTWARE LLC CONFIDENTIAL INFORMATION
+﻿// Copyright © 2019, Silverlake Software LLC and Contributors (see NOTICES file)
+// SPDX-License-Identifier: Apache-2.0
 
 // Created by Jamie da Silva on 10/30/2019 11:02 PM
 
@@ -119,6 +119,5 @@ namespace Mailboxes.Tests
 
             public long TimeSpanMs { get; private set; }
         }
-        
     }
 }

@@ -1,7 +1,5 @@
-﻿// Copyright © 2019, Silverlake Software LLC.  All Rights Reserved.
-// SILVERLAKE SOFTWARE LLC CONFIDENTIAL INFORMATION
-
-// Created by Jamie da Silva on 9/28/2019 9:46 PM
+﻿// Copyright © 2019, Silverlake Software LLC and Contributors (see NOTICES file)
+// SPDX-License-Identifier: Apache-2.0
 
 using System.Threading.Tasks;
 using Akka.Actor;
@@ -16,7 +14,6 @@ namespace ThirdParty.Benchmarks
     [MemoryDiagnoser]
     public class SkynetComparisonBenchmark
     {
-
         [Benchmark]
         public long Parallel() => global::ThirdParty.Benchmarks.Parallel.Skynet.skynetParallel(0, 10000, 10);
 
