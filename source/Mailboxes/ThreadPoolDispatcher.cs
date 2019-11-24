@@ -19,7 +19,12 @@ namespace Mailboxes
 
         public override void Execute(Mailbox mailbox)
         {
+#if NETSTANDARD
             ThreadPool.QueueUserWorkItem(m => ((ThreadPoolDispatcher)m.Dispatcher).WorkItemCallback(m), mailbox, true);
+#else
+            ThreadPool.QueueUserWorkItem(m => ((ThreadPoolDispatcher)((Mailbox)m).Dispatcher).WorkItemCallback((Mailbox)m), mailbox);
+#endif
+
         }
 
         public void WorkItemCallback(Mailbox mailbox)

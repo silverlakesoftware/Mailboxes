@@ -86,7 +86,11 @@ namespace Mailboxes.Internal
             Node? MergePairs(IComparer<T> comparer, List<Node> list)
             {
                 var odd = list.Count % 2;
+#if NETSTANDARD21
                 var result = odd == 0 ? null : list[^1];
+#else
+                var result = odd == 0 ? null : list[list.Count-1];
+#endif
                 var start = list.Count - odd;
 
                 while (start > 0)

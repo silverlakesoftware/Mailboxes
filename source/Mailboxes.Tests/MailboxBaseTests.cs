@@ -339,7 +339,11 @@ namespace Mailboxes.Tests
 
             mre.Wait();
             Assert.Null(exception);
+#if NETSTANDARD
             Assert.True(task.IsCompletedSuccessfully);
+#else
+            Assert.True(task.IsCompleted && !task.IsFaulted && !task.IsCanceled);
+#endif
         }
 
         [Fact]
@@ -407,7 +411,11 @@ namespace Mailboxes.Tests
 
             mre.Wait();
             Assert.Null(exception);
+#if NETSTANDARD
             Assert.True(task.IsCompletedSuccessfully);
+#else
+            Assert.True(task.IsCompleted && !task.IsFaulted && !task.IsCanceled);
+#endif
             Assert.Equal(1, task.Result);
         }
 

@@ -43,7 +43,7 @@ namespace Mailboxes
 
         public bool IsRunning => _runState == RunStateRunning;
 
-        public IEventHandler EventHandler { get; set; }
+        public IEventHandler? EventHandler { get; set; }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Execute(Action action, object? actionContext = null)
@@ -216,7 +216,9 @@ namespace Mailboxes
 
             SpinWait.SpinUntil(() => _stopTcs != null);
             Debug.Assert(_stopTcs != null, nameof(_stopTcs) + " != null");
+#pragma warning disable CS8602
             _stopTcs.TrySetResult(true);
+#pragma warning restore CS8602
         }
 
         protected internal abstract void OnStop();

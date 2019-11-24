@@ -28,7 +28,8 @@ namespace Mailboxes.Tests
         {
             var sut = (Scheduler)new FakeScheduler();
             bool didRun = false;
-            using var cts = new CancellationTokenSource(0);
+            using var cts = new CancellationTokenSource();
+            cts.Cancel();
             sut.Schedule<object?>(1, null, _ => didRun = true, cts.Token);
             Assert.False(didRun);
             Assert.False(((FakeScheduler)sut).DoScheduleCalled);
@@ -69,7 +70,8 @@ namespace Mailboxes.Tests
             var sut = (Scheduler)new FakeScheduler();
             var stopWatch = Stopwatch.StartNew();
             var threadId = Thread.CurrentThread.ManagedThreadId;
-            using var cts = new CancellationTokenSource(0);
+            using var cts = new CancellationTokenSource();
+            cts.Cancel();
             var delayTask = sut.Delay(1, cts.Token);
             Assert.True(delayTask.IsCanceled);
         }
