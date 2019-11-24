@@ -67,18 +67,13 @@ namespace ThirdParty.Benchmarks.AkkaDotNet
 
     public class RootActor : UntypedActor
     {
-        private int _num;
-        private DateTime _startDateTime;
-        IActorRef _originalSender;
+        IActorRef? _originalSender;
 
         protected override void OnReceive(object message)
         {
             switch (message)
             {
-                case Run run:
-                    _startDateTime = DateTime.Now;
-                    _num = run.Num - 1;
-
+                case Run _:
                     var skynetActor = Context.ActorOf(SkynetActor.Props);
                     var childStart = new SkynetActor.Start(5, 0);
 
@@ -88,23 +83,12 @@ namespace ThirdParty.Benchmarks.AkkaDotNet
 
                     break;
                 case long l:
-                    var now = DateTime.Now;
-                    var timeSpan = now - _startDateTime;
-
-                    _originalSender.Tell(l);
-                    CoordinatedShutdown.Get(Context.System).Run().Wait(5000);
+                    _originalSender!.Tell(l);
+                    CoordinatedShutdown.Get(Context.System).Run(CoordinatedShutdown.ClusterLeavingReason.Instance).Wait(5000);
                     break;
             }
         }
 
-        public class Run
-        {
-            public Run(int num)
-            {
-                Num = num;
-            }
-
-            public int Num { get; }
-        }
+        public class Run { }
     }
 }

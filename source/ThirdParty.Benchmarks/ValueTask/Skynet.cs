@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 
+// ReSharper disable IdentifierTypo
+#pragma warning disable IDE1006 // Naming Styles
+
 namespace ThirdParty.Benchmarks.ValueTask
 {
     [SuppressMessage("ReSharper", "InconsistentNaming")]
@@ -39,7 +42,6 @@ namespace ThirdParty.Benchmarks.ValueTask
             return sumAsync;
         }
 
-
         private static ValueTask<long> skynetValueTaskAsync(long num, long size, long div)
         {
             if (size == 1)
@@ -49,7 +51,7 @@ namespace ThirdParty.Benchmarks.ValueTask
             else
             {
                 long subtotal = 0;
-                List<Task<long>> tasks = null;
+                List<Task<long>>? tasks = null;
 
                 for (var i = 0; i < div; i++)
                 {

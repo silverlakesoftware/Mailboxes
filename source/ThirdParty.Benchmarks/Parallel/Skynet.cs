@@ -4,6 +4,9 @@ using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 
+// ReSharper disable IdentifierTypo
+#pragma warning disable IDE1006 // Naming Styles
+
 namespace ThirdParty.Benchmarks.Parallel
 {
     [SuppressMessage("ReSharper", "InconsistentNaming")]

@@ -1,7 +1,6 @@
 ﻿// From: https://github.com/Blind-Striker/actor-model-benchmarks/blob/master/src/Akka.Net/Akka.Net.Skynet/Program.cs
 // Apache 2 License
 
-using System;
 using System.Threading.Tasks;
 using Proto;
 
@@ -80,9 +79,7 @@ namespace ThirdParty.Benchmarks.Proto
 
     public class RootActor : IActor
     {
-        private int _num;
-        private DateTime _startDateTime;
-        private PID _originalSender;
+        private PID? _originalSender;
 
         public Task ReceiveAsync(IContext context)
         {
@@ -90,10 +87,7 @@ namespace ThirdParty.Benchmarks.Proto
 
             switch (msg)
             {
-                case Run runMessage:
-                    _startDateTime = DateTime.Now;
-                    _num = runMessage.Num - 1;
-
+                case Run _:
                     var pid = context.Spawn(SkynetActor.Props);
                     var childStart = new SkynetActor.Start(5, 0);
 
@@ -102,23 +96,8 @@ namespace ThirdParty.Benchmarks.Proto
 
                     break;
                 case long l:
-                    var now = DateTime.Now;
-                    var timeSpan = now - _startDateTime;
 
                     context.Send(_originalSender, new Result(l));
-
-//                    Console.ForegroundColor = ConsoleColor.Green;
-//                    Console.WriteLine($"Result: {l} in {timeSpan.TotalMilliseconds} ms.");
-//                    Console.ForegroundColor = ConsoleColor.White;
-//
-//                    if (_num == 0)
-//                    {
-//                        Console.WriteLine("Actor System Terminated");
-//                    }
-//                    else
-//                    {
-//                        context.Self.Tell(new Run(_num));
-//                    }
 
                     break;
             }
@@ -126,15 +105,7 @@ namespace ThirdParty.Benchmarks.Proto
             return Actor.Done;
         }
 
-        public class Run
-        {
-            public Run(int num)
-            {
-                Num = num;
-            }
-
-            public int Num { get; }
-        }
+        public class Run { }
 
         public class Result
         {

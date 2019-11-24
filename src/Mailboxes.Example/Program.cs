@@ -13,7 +13,7 @@ namespace Mailboxes.Example
     {
         static readonly Mailbox _mailbox = new ConcurrentMailbox();
 
-        public static async Task Main(string[] args)
+        public static async Task Main(string[] _)
         {
             Console.WriteLine("Hello World!");
 

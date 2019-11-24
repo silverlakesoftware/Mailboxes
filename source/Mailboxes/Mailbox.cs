@@ -7,6 +7,8 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
+#pragma warning disable IDE0044 // Add readonly modifier
+
 namespace Mailboxes
 {
     public abstract class Mailbox

@@ -25,7 +25,7 @@ namespace ThirdParty.Benchmarks
         {
             var system = ActorSystem.Create("main");
             var root = system.ActorOf(AkkaProps.Create<RootActor>());
-            var run = new RootActor.Run(1);
+            var run = new RootActor.Run();
             return root.Ask(run);
         }
 
@@ -36,7 +36,7 @@ namespace ThirdParty.Benchmarks
             var props = ProtoProps.FromProducer(() => new Proto.RootActor());
             var pid = context.Spawn(props);
 
-            var run = new Proto.RootActor.Run(1);
+            var run = new Proto.RootActor.Run();
 
             return context.RequestAsync<Proto.RootActor.Result>(pid, run);
         }

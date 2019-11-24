@@ -49,8 +49,7 @@ namespace Mailboxes.Tests
         public void ActionIsScheduled()
         {
             var sut = (Scheduler)new FakeScheduler();
-            bool didRun = false;
-            sut.Schedule<object?>(1, null, _ => didRun = true);
+            sut.Schedule<object?>(1, null, _ => { });
             Assert.True(((FakeScheduler)sut).DoScheduleCalled);
         }
 
@@ -58,8 +57,7 @@ namespace Mailboxes.Tests
         public void TimeSpanOverloadIsScheduled()
         {
             var sut = (Scheduler)new FakeScheduler();
-            bool didRun = false;
-            sut.Schedule<object?>(TimeSpan.FromMilliseconds(2), null, _ => didRun = true);
+            sut.Schedule<object?>(TimeSpan.FromMilliseconds(2), null, _ => { });
             Assert.True(((FakeScheduler)sut).DoScheduleCalled);
             Assert.Equal(2, ((FakeScheduler)sut).TimeSpanMs);
         }
@@ -80,8 +78,6 @@ namespace Mailboxes.Tests
         public async Task NegativeOrZeroTimeSpanDelayReturnsImmediately()
         {
             var sut = (Scheduler)new FakeScheduler();
-            var stopWatch = Stopwatch.StartNew();
-            var threadId = Thread.CurrentThread.ManagedThreadId;
             await sut.Delay(-1);
             await sut.Delay(0);
             Assert.False(((FakeScheduler)sut).DoScheduleCalled);
@@ -91,7 +87,6 @@ namespace Mailboxes.Tests
         public async Task DelayIsScheduled()
         {
             var sut = (Scheduler)new FakeScheduler();
-            bool didRun = false;
             await sut.Delay(1);
             Assert.True(((FakeScheduler)sut).DoScheduleCalled);
         }
@@ -100,7 +95,6 @@ namespace Mailboxes.Tests
         public async Task TimeSpanDelayOverloadIsScheduled()
         {
             var sut = (Scheduler)new FakeScheduler();
-            bool didRun = false;
             await sut.Delay(TimeSpan.FromMilliseconds(2));
             Assert.True(((FakeScheduler)sut).DoScheduleCalled);
             Assert.Equal(2, ((FakeScheduler)sut).TimeSpanMs);

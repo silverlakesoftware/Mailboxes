@@ -213,8 +213,7 @@ namespace Mailboxes.Tests
 
             using var mre1 = new ManualResetEventSlim();
 
-            var target = new AsyncLocal<int>();
-            target.Value = 1;
+            var target = new AsyncLocal<int> {Value = 1};
 
             Test();
 
@@ -247,8 +246,7 @@ namespace Mailboxes.Tests
 
             using var mre1 = new ManualResetEventSlim();
 
-            var target = new AsyncLocal<int>();
-            target.Value = 1;
+            var target = new AsyncLocal<int> {Value = 1};
 
             sut.Execute(Test);
 
@@ -301,12 +299,14 @@ namespace Mailboxes.Tests
                 InnerTest();
             }
 
-            async void InnerTest()
+#pragma warning disable CS1998
+            static async void InnerTest()
             {
                 // Note that this exception will be queued up to be thrown as an individual action
                 // https://github.com/dotnet/corefx/blob/3c30e11dbc7c381aa89648d06048766026eed96e/src/Common/src/CoreLib/System/Runtime/CompilerServices/AsyncVoidMethodBuilder.cs#L116
                 throw new Exception("Boom");
             }
+#pragma warning restore CS1998
 
             Assert.ThrowsAsync<Exception>(Test);
         }
