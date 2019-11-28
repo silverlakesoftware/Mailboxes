@@ -1,10 +1,12 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <!-- Package properties -->
+  <!-- Common Package properties -->
   <PropertyGroup>
     <Authors>Jamie da Silva</Authors>
     <Company>Silverlake Software LLC</Company>
     <Copyright>Copyright &#169; 2019, Silverlake Software LLC and Contributors (see NOTICES file).</Copyright>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/silverlakesoftware/mailboxes</RepositoryUrl>
   </PropertyGroup>
 
   <!-- Add Git versioning to all projects -->  

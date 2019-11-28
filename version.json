@@ -8,11 +8,6 @@
     "^refs/heads/master$",
     "^refs/tags/v\\d+\\.\\d+"
   ],
-  "cloudBuild": {
-    "buildNumber": {
-      "enabled": true
-    }
-  },
   "release": {
     "branchName": "v{version}",
     "versionIncrement": "minor",

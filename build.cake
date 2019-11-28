@@ -1,10 +1,21 @@
+#tool "nuget:?package=NuGet.CommandLine&version=5.3.1"
+
 // Arguments
 
 var target = Argument("target", "Default");
 
 var configuration = Argument("configuration", "Release");
 
+var nugetPushKey = EnvironmentVariable("NugetPushKey");
+
+var nugetPushSource = EnvironmentVariable("NugetPushSource");
+
 // Tasks
+
+Setup(_ => {
+   var cmd = BuildSystem.IsRunningOnAzurePipelinesHosted  ? "cloud" : "get-version";
+   DotNetCoreTool(".", "nbgv", cmd);
+});
 
 Task("Clean")
 .Does(() => {   
@@ -68,6 +79,25 @@ Task("Pack")
       Configuration = configuration
    };
    DotNetCorePack(".", settings);
+});
+
+Task("Publish")
+.Does(() => {
+
+   if (nugetPushKey==null || nugetPushSource==null)
+   {
+      Error("Unable to deploy: NugetPushKey or NugetPushSource is not defined.");
+   }
+
+   foreach(var file in GetFiles(@$"output\{configuration}\*.nupkg"))
+   {
+      NuGetPush(file,
+      new NuGetPushSettings
+      {
+         Source = nugetPushSource,
+         ApiKey = nugetPushKey,
+      });
+   }
 });
 
 Task("Default")

@@ -3,6 +3,11 @@
 
 # Mailboxes
 
+[![Build Status](https://img.shields.io/azure-devops/build/silverlakesoftware/mailboxes/1)](https://dev.azure.com/silverlakesoftware/Mailboxes/_build/latest?definitionId=1)
+[![NuGet package](https://img.shields.io/nuget/v/Mailboxes.svg)](https://nuget.org/packages/Mailboxes)
+
+## Overview
+
 Mailboxes is a low-level implementation of an actor-like computation model.
 - high performance
 - support usage of C# idioms (i.e. async/await)

@@ -151,7 +151,7 @@ namespace Mailboxes.Tests
         [Fact]
         public async Task StopWorksUnderStress()
         {
-            const int msgCount = 1000;
+            const int msgCount = 10000;
             int minCounter = int.MaxValue;
             int maxCounter = 0;
 

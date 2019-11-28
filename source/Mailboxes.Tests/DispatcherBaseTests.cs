@@ -46,7 +46,18 @@ namespace Mailboxes.Tests
             mailbox.Execute(() => throw new System.Exception("Boom."));
             mailbox.Execute(() => mre.Set());
 
-            Assert.False(mre.Wait(25));
+
+            for (int i = 0; i < 20; ++i)
+            {
+                if (mailbox.IsStopped)
+                {
+                    break;
+                }
+
+                Thread.Sleep(25);
+            }
+
+            Assert.True(mailbox.IsStopped);
         }
 
         [Fact]
@@ -59,7 +70,7 @@ namespace Mailboxes.Tests
             mailbox.Execute(() => throw new System.Exception("Boom."));
             mailbox.Execute(() => mre.Set());
 
-            Assert.True(mre.Wait(25));
+            Assert.True(mre.Wait(TimeSpan.FromMinutes(1)));
         }
 
         void Mailbox.IEventHandler.OnException(Exception ex)
