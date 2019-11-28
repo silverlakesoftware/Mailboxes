@@ -321,7 +321,7 @@ namespace Mailboxes.Tests
             sut.Execute(() => throw new Exception("Boom."));
             sut.Execute(() => mre.Set());
 
-            Assert.True(mre.Wait(25));
+            Assert.True(mre.Wait(TimeSpan.FromMinutes(1)));
         }
 
         [Fact]

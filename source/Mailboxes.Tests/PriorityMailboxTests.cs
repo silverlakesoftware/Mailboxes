@@ -1,6 +1,7 @@
 ﻿// Copyright © 2019, Silverlake Software LLC and Contributors (see NOTICES file)
 // SPDX-License-Identifier: Apache-2.0
 
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -45,7 +46,7 @@ namespace Mailboxes.Tests
         [Fact]
         public void SettingStateViaAwaitWorks()
         {
-            var sut = new PriorityMailbox(new TestComparer());
+            var sut = new TestPriorityMailbox(new TestComparer());
             using var mre = new ManualResetEventSlim();
             using var mre2 = new ManualResetEventSlim();
             using var mre3 = new ManualResetEventSlim();
@@ -62,33 +63,34 @@ namespace Mailboxes.Tests
 
             mre.Wait();
 
+            sut.OnAfterQueue = () => mre3.Set();
             var task2 = Task.Run(async () =>
             {
                 await sut.WithContext("b");
                 executedStepB = true;
                 Assert.True(executedStepA);
             });
+            mre3.Wait();
 
-            Thread.Sleep(5);
-
+            sut.OnAfterQueue = () => mre4.Set();
             var task3 = Task.Run(async () =>
             {
                 await sut.WithContext("a");
                 executedStepA = true;
                 Assert.False(executedStepB);
             });
-
-            Thread.Sleep(5);
+            mre4.Wait();
 
             mre2.Set();
+
             Task.WaitAll(task1, task2, task3);
             Assert.True(executedStepB);
         }
 
         [Fact]
-        public void SettingStateForTaskContinuationWorks()
+        public async Task SettingStateForTaskContinuationWorks()
         {
-            var sut = new PriorityMailbox(new TestComparer());
+            var sut = new TestPriorityMailbox(new TestComparer());
             using var mre = new ManualResetEventSlim();
             using var mre2 = new ManualResetEventSlim();
             using var mre3 = new ManualResetEventSlim();
@@ -96,43 +98,48 @@ namespace Mailboxes.Tests
             bool executedStepA = false;
             bool executedStepB = false;
 
-            var task1 = Task.Run(async () =>
+            var task = Task.Run(async () =>
             {
                 await sut;
-                mre.Set();
-                mre2.Wait();
-            });
-
-            mre.Wait();
-
-            var task2 = Task.Run(async () =>
-            {
-                await sut;
+                sut.OnAfterQueue = () =>
+                {
+                    sut.OnAfterQueue = () => { };
+                    sut.Execute(() =>
+                    {
+                        executedStepA = true;
+                        Assert.False(executedStepB);
+                    }, "a");
+                    mre.Set();
+                };
                 await Task.Delay(1).ContinueWithContext("b");
                 executedStepB = true;
                 Assert.True(executedStepA);
             });
 
-            Thread.Sleep(5);
-
-            var task3 = Task.Run(async () =>
-            {
-                await sut;
-                await Task.Delay(1).ContinueWithContext("a");
-                executedStepA = true;
-                Assert.False(executedStepB);
-            });
-
-            Thread.Sleep(5);
-
-            mre2.Set();
-            Task.WaitAll(task1, task2, task3);
+            mre.Wait();
+            await task;
             Assert.True(executedStepB);
         }
 
         public class TestComparer : IComparer<object?>
         {
             public int Compare(object? x, object? y) => string.CompareOrdinal(x as string, y as string);
+        }
+
+        public class TestPriorityMailbox : PriorityMailbox
+        {
+
+            public Action? OnAfterQueue { get; set; }
+
+            public TestPriorityMailbox(IComparer<object?> contextComparer) : base(contextComparer)
+            {
+            }
+
+            protected override void DoQueueAction(in MailboxAction action, object? actionContext)
+            {
+                base.DoQueueAction(action, actionContext);
+                OnAfterQueue?.Invoke();
+            }
         }
     }
 }
