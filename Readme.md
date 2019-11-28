@@ -1,6 +1,3 @@
-# I WILL BE FORCE PUSHING UNTIL THE BUILD PIPELINE IS SETUP AND READY
-# YOU MIGHT NOT WANT TO PULL OR FORK UNTIL THEN
-
 # Mailboxes
 
 [![Build Status](https://img.shields.io/azure-devops/build/silverlakesoftware/mailboxes/1)](https://dev.azure.com/silverlakesoftware/Mailboxes/_build/latest?definitionId=1)
