@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System;
+using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -14,6 +15,7 @@ namespace Mailboxes.Tests
 
         public Scheduler CreateScheduler() => new DefaultScheduler();
 
+        [Trait("Category", "TimingSensitive")]
         [Fact]
         public void ImmediateScheduleDoesNotChangeNow()
         {
@@ -25,6 +27,7 @@ namespace Mailboxes.Tests
             Assert.True(offset.TotalMilliseconds <= 1);
         }
 
+        [Trait("Category", "TimingSensitive")]
         [Fact]
         public async Task NoDelayDoesNotChangeNow()
         {
@@ -36,6 +39,7 @@ namespace Mailboxes.Tests
             Assert.True(offset.TotalMilliseconds <= 1);
         }
 
+        [Trait("Category", "TimingSensitive")]
         [Fact]
         public void ScheduleForOneMillisecondOccursWhenExpected()
         {
@@ -55,6 +59,7 @@ namespace Mailboxes.Tests
             Assert.True(offset.TotalMilliseconds > 1 && offset.TotalMilliseconds < (2 * TimerRange));
         }
 
+        [Trait("Category", "TimingSensitive")]
         [Fact]
         public async Task DelayForOneMillisecondOccursWhenExpected()
         {

@@ -41,6 +41,7 @@ Task("Test")
       {
          NoBuild = true,
          Configuration = configuration,
+         Filter = "Category!=TimingSensitive",
          ArgumentCustomization = args=>args.Append($"--logger trx;LogFileName=TestResults.trx")
       };
       DotNetCoreTest(".", settings);

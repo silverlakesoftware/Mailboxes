@@ -1,0 +1,26 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+- develop
+
+pool:
+  vmImage: 'windows-latest'
+
+steps:
+- task: UseDotNet@2
+  displayName: 'Use .NET Core sdk'
+  inputs:
+    packageType: sdk
+    version: 3.0.x
+    installationPath: $(Agent.ToolsDirectory)/dotnet
+
+- task: CmdLine@2
+  inputs:
+    script: 'powershell -ExecutionPolicy ByPass -File build.ps1 -script "build.cake" -target "Default" -verbosity normal'
+
+#- powershell: ./build.ps1
+#  displayName: 'Execute Build'

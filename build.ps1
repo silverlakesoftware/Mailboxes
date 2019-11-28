@@ -1,3 +1,4 @@
+# This script is compatible with the VSCode Cake extension
 [CmdletBinding()]
 Param(
     [string]$Script = "build.cake",
@@ -17,5 +18,6 @@ if ($Target) { $cakeArguments += "--target=$Target" }
 if ($Verbosity) { $cakeArguments += "-verbosity=$Verbosity" }
 $cakeArguments += $ScriptArgs
 
-& dotnet tool run dotnet-cake -- $cakeArguments
+# https://stackoverflow.com/a/20950421/287602
+& dotnet tool run dotnet-cake -- $cakeArguments 2>&1 | %{ "$_" }
 exit $LASTEXITCODE
