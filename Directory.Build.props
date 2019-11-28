@@ -2,17 +2,26 @@
 
   <!-- Package properties -->
   <PropertyGroup>
-    <Version>0.1.0</Version>
     <Authors>Jamie da Silva</Authors>
     <Company>Silverlake Software LLC</Company>
-    <Copyright>Copyright &#169; 2019, Silverlake Software LLC and Contributors (see NOTICES file)</Copyright>
+    <Copyright>Copyright &#169; 2019, Silverlake Software LLC and Contributors (see NOTICES file).</Copyright>
   </PropertyGroup>
+
+  <!-- Add Git versioning to all projects -->  
+  <ItemGroup>
+    <PackageReference Include="Nerdbank.GitVersioning">
+      <Version>3.0.28</Version>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
 
   <!-- Common settings -->
   <PropertyGroup>
     <LangVersion>8.0</LangVersion>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);NU5105</NoWarn>
   </PropertyGroup>
 
   <!-- Setup a common output folder for all projects -->
@@ -22,6 +31,8 @@
     <MSBuildProjectExtensionsPath>$(MSBuildThisFileDirectory)temp\exts\$(MSBuildProjectName)</MSBuildProjectExtensionsPath>
     <BaseOutputPath>$(MSBuildThisFileDirectory)output</BaseOutputPath>
     <OutputPath>$(BaseOutputPath)/$(Configuration)</OutputPath>
+    <!-- https://stackoverflow.com/questions/49917144/how-to-publish-results-using-dotnet-test-command/49922944#comment99365243_49922944 -->
+    <VSTestResultsDirectory>$(BaseIntermediateOutputPath)\$(TargetFramework)\</VSTestResultsDirectory>
   </PropertyGroup>
 
 </Project>

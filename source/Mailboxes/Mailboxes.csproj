@@ -4,6 +4,8 @@
     <TargetFrameworks>net46;netstandard21</TargetFrameworks>
     <DebugType>pdbonly</DebugType>
     <DebugSymbols>true</DebugSymbols>
+    <Description>Mailboxes is a low-level implementation of an actor-like computation model.</Description>
+    <IsPackable>true</IsPackable>
   </PropertyGroup>
 
 </Project>
