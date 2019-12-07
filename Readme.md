@@ -6,10 +6,11 @@
 ## Overview
 
 Mailboxes is a low-level implementation of an actor-like computation model.
+It has the following goals:
 - high performance
 - support usage of C# idioms (i.e. async/await)
 - concurency model focused (i.e. local communication only)
-- integrate will with existing code
+- integrate well with existing code
 - strongly typed
 - provide building blocks for a more complete "pay as you go" actor system
 
@@ -25,8 +26,8 @@ This allows C# idioms like await/async, Task, and CancellationToken to be used. 
 - Can be awaited by returning a Task.
 - Can await non-actor code and the continuation will be called on an excution unit.
 - Await the excution unit of another mailbox and the continuation will be called on an execution unit of the calling mailbox.
-- Can use a Task to capture success, an exception, or cancellation result of an execution unit.  (i.e. treated like a message sent back to the caller.)
-- CancellationTokens can be transformed to be mailbox safe with state that can only be modified as part of it's own execution unit.
+- Can use a Task to capture success, an exception, or cancellation result of an execution unit.  It's treated like a message sent back to the caller.
+- CancellationTokens can be transformed to be mailbox safe with state that can only be modified within it's own execution unit for that mailbox.
 
 ## Sample
 
@@ -76,13 +77,13 @@ It is important to understand that the mailbox will enforce one execution unit a
 
 ## Things to avoid:
 `.ConfigureAwait(false)`
-When awaiting a mailbox execution unit this can extend the execution unit of the mailbox but not forcing a context switch back to the calling context. In an a mailbox execution unit when awaiting a task this can cause code that changes state outside of an execution unit.
+When awaiting a mailbox execution unit this can extend the execution unit of the mailbox by not forcing a context switch back to the calling context. In an a mailbox execution unit when awaiting a task this can cause code that changes state outside of an execution unit.
 
-`async void`  methods:
-await mailbox cannot be used in an async void method.  The mailbox will be unable to capture the exception which will leak out to the SynchronizationContext of the caller of the async void method.  Async void methods can be called or used with Execute, but note that any exceptions will be propagated as a separate queued action to the mailbox and not occur immediately.
+`async void` methods:
+await mailbox cannot be used in an async void method.  The mailbox will be unable to capture an exception which will leak out to the SynchronizationContext of the caller of the async void method.  Async void methods can be called or used with Execute, but note that any exceptions will be propagated as a separate queued action to the mailbox and not occur immediately.
 
 Using a `CancellationToken` directly:
-A CancellationToken can change it's state at any time which violates the concurrency model of a mailbox.  The .Include method on Mailbox will return safe CancellationToken that will observe the original CancellationToken and only propegate a state change on it's own execution unit.
+A CancellationToken can change it's state at any time which violates the concurrency model of a mailbox.  The `.Include` method on Mailbox will return safe `CancellationToken` that will observe the original `CancellationToken` and only propagate a state change on it's own execution unit.
 
 ## Project Structure
 
@@ -94,6 +95,11 @@ A CancellationToken can change it's state at any time which violates the concurr
 | Mailboxes.Example | Nothing really yet :) |
 | ThirdParty.Benchmarks | Comparison benchmarks to some Actor projects |
 
+
+## Benchmarks
+
+To run benchmarks from the command line:
+`dotnet run -c Release -p source/Mailboxes.Benchmarks -f netcoreapp30 -- --job short`
 
 ## Contributions
 
