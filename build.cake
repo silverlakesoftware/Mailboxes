@@ -53,8 +53,11 @@ Task("Test")
          NoBuild = true,
          Configuration = configuration,
          Filter = "Category!=TimingSensitive",
-         ArgumentCustomization = args=>args.Append($"--logger trx;LogFileName=TestResults.trx")
       };
+      if (BuildSystem.IsRunningOnAzurePipelinesHosted)
+      {
+         settings.ArgumentCustomization = args => args.Append($"--logger trx;LogFileName=TestResults.trx");
+      }
       DotNetCoreTest(".", settings);
    }
    catch
@@ -63,11 +66,14 @@ Task("Test")
    }
    finally
    {
-      TFBuild.Commands.PublishTestResults(
-      new TFBuildPublishTestResultsData {
-         TestResultsFiles = GetFiles("**/TestResults.trx").ToArray(),
-         TestRunner = TFTestRunnerType.VSTest
-      });
+      if (BuildSystem.IsRunningOnAzurePipelinesHosted)
+      {
+         TFBuild.Commands.PublishTestResults(
+         new TFBuildPublishTestResultsData {
+            TestResultsFiles = GetFiles("**/TestResults.trx").ToArray(),
+            TestRunner = TFTestRunnerType.VSTest
+         });
+      }
    }
 });
 

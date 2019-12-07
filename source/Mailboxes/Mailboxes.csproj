@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net46;netstandard21</TargetFrameworks>
+    <TargetFrameworks>net461;netstandard21</TargetFrameworks>
     <DebugType>pdbonly</DebugType>
     <DebugSymbols>true</DebugSymbols>
     <IsPackable>true</IsPackable>
@@ -9,5 +9,9 @@
     <Description>Mailboxes is a low-level implementation of an actor-like computation model.</Description>
     <PackageTags>actor;concurrency</PackageTags>
   </PropertyGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net461'">
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" Version="1.0.0" />
+  </ItemGroup>
 
 </Project>
