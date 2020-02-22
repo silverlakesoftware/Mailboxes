@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using BenchmarkDotNet.Running;
+using Mailboxes.Benchmarks.ExecutionPatterns;
 
 namespace Mailboxes.Benchmarks
 {
@@ -9,8 +10,18 @@ namespace Mailboxes.Benchmarks
     {
         static void Main(string[] args)
         {
+            //RunExecutionPatternBenchmarks();
             BenchmarkRunner.Run<SimpleMailboxBenchmarks>();
             BenchmarkRunner.Run<ComparisonBenchmarks>();
+        }
+
+        static void RunExecutionPatternBenchmarks()
+        {
+            BenchmarkRunner.Run<StructBenchmarks>();
+            BenchmarkRunner.Run<ClassBenchmarks>();
+            BenchmarkRunner.Run<HybridBenchmarks>();
+            BenchmarkRunner.Run<Hybrid2Benchmarks>();
+            BenchmarkRunner.Run<Hybrid3Benchmarks>();
         }
     }
 } 
