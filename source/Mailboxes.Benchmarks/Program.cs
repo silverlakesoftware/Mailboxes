@@ -11,7 +11,7 @@ namespace Mailboxes.Benchmarks
         static void Main(string[] args)
         {
             //RunExecutionPatternBenchmarks();
-            BenchmarkRunner.Run<SimpleMailboxBenchmarks>();
+            BenchmarkRunner.Run<CoreMailboxBenchmarks>();
             BenchmarkRunner.Run<ComparisonBenchmarks>();
         }
 

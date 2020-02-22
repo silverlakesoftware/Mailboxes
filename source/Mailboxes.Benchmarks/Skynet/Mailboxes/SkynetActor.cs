@@ -21,7 +21,6 @@ namespace Mailboxes.Benchmarks.Skynet.Mailboxes
 
         public void Start(int level, long num)
         {
-            //await _mailbox;
             _mailbox.Execute(() =>
             {
                 if (level == 1)
@@ -33,7 +32,7 @@ namespace Mailboxes.Benchmarks.Skynet.Mailboxes
                 var startNum = num * 10;
                 for (int i = 0; i < 10; ++i)
                 {
-                    var child = new SkynetActor(Value);
+                    var child = new SkynetActor(n => Value(n));
                     child.Start(level - 1, startNum + i);
                 }
             });
@@ -41,7 +40,6 @@ namespace Mailboxes.Benchmarks.Skynet.Mailboxes
 
         public void Value(long num)
         {
-            //await _mailbox;
             _mailbox.Execute(() =>
             {
                 _todo -= 1;
