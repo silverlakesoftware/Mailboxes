@@ -30,7 +30,7 @@ namespace Mailboxes
         public void WorkItemCallback(Mailbox mailbox)
         {
             var action = mailbox.DequeueAction();
-            if (action.Action == null)
+            if (action.IsNull())
             {
                 mailbox.TryContinueRunning();
                 return;
@@ -41,15 +41,15 @@ namespace Mailboxes
 
             try
             {
-                action.Action(action.State);
+                action.Execute();
 
                 var executionUnits = _executionUnits - 1;
                 for (int i = 0; i < executionUnits; ++i)
                 {
                     action = mailbox.DequeueAction();
-                    if (action.Action != null)
+                    if (!action.IsNull())
                     {
-                        action.Action(action.State);
+                        action.Execute();
                     }
                     else
                     {

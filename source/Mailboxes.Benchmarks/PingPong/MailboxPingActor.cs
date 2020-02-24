@@ -1,6 +1,7 @@
 ﻿// Copyright © 2019, Silverlake Software LLC and Contributors (see NOTICES file)
 // SPDX-License-Identifier: Apache-2.0
 
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Mailboxes.Benchmarks.PingPong
@@ -13,6 +14,7 @@ namespace Mailboxes.Benchmarks.PingPong
     public class MailboxPingActor : IMessageReceiver
     {
         readonly Mailbox _mailbox = new ConcurrentMailbox();
+        readonly SendOrPostCallback _messageAction;
 
         private readonly TaskCompletionSource<bool> _wgStop;
         private int _messageCount;
@@ -24,6 +26,7 @@ namespace Mailboxes.Benchmarks.PingPong
             _wgStop = wgStop;
             _messageCount = messageCount;
             _batchSize = batchSize;
+            _messageAction = state => this.DoMessage((IMessageReceiver)state!);
         }
 
         public void Start(IMessageReceiver sender)
@@ -38,24 +41,24 @@ namespace Mailboxes.Benchmarks.PingPong
 
         public void Message(IMessageReceiver sender)
         {
-            _mailbox.Execute(DoMessage);
+            _mailbox.Execute(_messageAction, sender);
+        }
 
-            void DoMessage()
+        void DoMessage(IMessageReceiver sender)
+        {
+            _batch--;
+            if (_batch > 0)
             {
-                _batch--;
-                if (_batch > 0)
-                {
-                    return;
-                }
-
-                if (!SendBatch(sender))
-                {
-                    _wgStop.SetResult(true);
-                }
+                return;
+            }
+            
+            if (!SendBatch(sender))
+            {
+                _wgStop.SetResult(true);
             }
         }
 
-        private bool SendBatch(IMessageReceiver sender)
+        bool SendBatch(IMessageReceiver sender)
         {
             if (_messageCount == 0)
             {
@@ -76,15 +79,21 @@ namespace Mailboxes.Benchmarks.PingPong
     public class MalboxEchoActor : IMessageReceiver
     {
         readonly Mailbox _mailbox = new ConcurrentMailbox();
+        readonly SendOrPostCallback _messageAction;
+
+        public MalboxEchoActor()
+        {
+            _messageAction = state => DoMessage((IMessageReceiver)state!);
+        }
 
         public void Message(IMessageReceiver sender)
         {
-            _mailbox.Execute(DoExecute);
+            _mailbox.Execute(_messageAction, sender);
+        }
 
-            void DoExecute()
-            {
-                sender.Message(sender);
-            }
+        void DoMessage(IMessageReceiver sender)
+        {
+            sender.Message(sender);
         }
     }
 }

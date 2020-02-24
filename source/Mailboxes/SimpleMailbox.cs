@@ -4,6 +4,7 @@
 // Created by Jamie da Silva on 9/29/2019 2:10 PM
 
 using System.Collections.Generic;
+using Mailboxes.Internal;
 
 namespace Mailboxes
 {

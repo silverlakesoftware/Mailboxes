@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Mailboxes.Internal;
 
 #pragma warning disable IDE0044 // Add readonly modifier
 
@@ -50,7 +51,20 @@ namespace Mailboxes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Execute(Action action, object? actionContext = null)
         {
-            QueueAction(new MailboxAction(a => ((Action)a!).Invoke(), action), actionContext);
+            QueueAction(new MailboxAction(action), actionContext);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Execute(SendOrPostCallback callback, object? state, object? actionContext = null)
+        {
+            QueueAction(new MailboxAction(callback, state), actionContext);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Execute<T1>(Action<T1> action, in T1 arg1, object? actionContext = null)
+        {
+            var target = new MailboxActionTarget<T1>(arg1);
+            QueueAction(new MailboxAction(target, action), actionContext);
         }
 
         public Task ExecuteAsync(Func<Task> action, object? actionContext = null)
@@ -246,7 +260,7 @@ namespace Mailboxes
 
             public void OnCompleted(Action continuation)
             {
-                _mailbox.QueueAction(new MailboxAction(a => ((Action)a!).Invoke(), continuation), null);
+                _mailbox.QueueAction(new MailboxAction(continuation), null);
             }
 
             public void GetResult() { }
@@ -269,7 +283,7 @@ namespace Mailboxes
 
             public void OnCompleted(Action continuation)
             {
-                _mailbox.QueueAction(new MailboxAction(a => ((Action)a!).Invoke(), continuation), _actionContext);
+                _mailbox.QueueAction(new MailboxAction(continuation), _actionContext);
             }
 
             public void GetResult() { }

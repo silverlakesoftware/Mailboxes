@@ -13,6 +13,12 @@ namespace Mailboxes.Benchmarks
     [MemoryDiagnoser]
     public class CoreMailboxBenchmarks
     {
+        static CoreMailboxBenchmarks()
+        {
+            SetDoneAction = _ => _done = true;
+            IsDoneFunc = () => _done;
+        }
+
         [ParamsSource(nameof(MailboxTypeParams))]
         public MailboxTypeParam MailboxType { get; set; }
 
@@ -42,6 +48,8 @@ namespace Mailboxes.Benchmarks
         }
 
         static volatile bool _done;
+        static readonly SendOrPostCallback SetDoneAction;
+        static readonly Func<bool> IsDoneFunc;
 
         [Benchmark]
         public void CreateAndOneDirectCall()
@@ -49,9 +57,9 @@ namespace Mailboxes.Benchmarks
             var mailbox = CreateMailbox();
             _done = false;
 
-            mailbox.Execute(() => _done = true);
+            mailbox.Execute(SetDoneAction, null);
 
-            SpinWait.SpinUntil(() => _done);
+            SpinWait.SpinUntil(IsDoneFunc);
         }
 
         [Benchmark(OperationsPerInvoke = 1000)]
@@ -139,17 +147,19 @@ namespace Mailboxes.Benchmarks
             TaskCompletionSource<int> _tcs;
             int _limit;
             int _value;
+            SendOrPostCallback _incrementAction;
 
             public IncrementState(Mailbox mailbox, TaskCompletionSource<int> tcs, int limit = 1000)
             {
                 _mailbox = mailbox;
                 _tcs = tcs;
                 _limit = limit;
+                _incrementAction = o => ((IncrementState)o!).DoIncrement();
             }
 
             public void DoDirectIncrement()
             {
-                _mailbox.Execute(() => DoIncrement());
+                _mailbox.Execute(_incrementAction, this);
             }
 
             void DoIncrement()

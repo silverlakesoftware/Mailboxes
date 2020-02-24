@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Mailboxes.Internal;
 using Xunit;
 using Xunit.Abstractions;
 

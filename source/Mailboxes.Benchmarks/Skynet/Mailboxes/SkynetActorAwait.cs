@@ -8,46 +8,34 @@ namespace Mailboxes.Benchmarks.Skynet.Mailboxes
 {
     class SkynetActorAwait
     {
-        readonly Func<long, Task> _resultCallback;
         readonly Mailbox _mailbox = new SimpleMailbox();
 
-        long _count;
-        int _todo = 10;
-
-        public SkynetActorAwait(Func<long,Task> resultCallback)
-        {
-            _resultCallback = resultCallback;
-        }
-
-        public async Task Start(int level, long num)
+        public async Task<long> Start(int level, long num)
         {
             await _mailbox;
 
             if (level == 1)
             {
-                _ = _resultCallback(num);
-                return;
+                return num;
             }
 
             var startNum = num * 10;
+            var tasks = new Task<long>[10];
             for (int i = 0; i < 10; ++i)
             {
-                var child = new SkynetActorAwait(n => Value(n));
-                _ = child.Start(level - 1, startNum + i);
+                var child = new SkynetActorAwait();
+                tasks[i] = child.Start(level - 1, startNum + i);
             }
-        }
 
-        public async Task Value(long num)
-        {
-            await _mailbox;
+            var results = await Task.WhenAll(tasks);
 
-            _todo -= 1;
-            _count += num;
-
-            if (_todo == 0)
+            long count = 0;
+            for (int i = 0; i < 10; ++i)
             {
-                _ = _resultCallback(_count);
+                count += results[i];
             }
+
+            return count;
         }
     }
 
@@ -59,14 +47,10 @@ namespace Mailboxes.Benchmarks.Skynet.Mailboxes
         {
             await _mailbox;
 
-            var tcs = new TaskCompletionSource<long>();
-            var actor = new SkynetActorAwait(l =>
-            {
-                tcs.SetResult(l);
-                return Task.CompletedTask;
-            });
-            _ = actor.Start(5, 0);
-            return await tcs.Task;
+            var actor = new SkynetActorAwait();
+            var result = await actor.Start(5, 0);
+            //Console.WriteLine(result);
+            return result;
         }
     }
 }

@@ -4,6 +4,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Mailboxes.Internal;
 
 namespace Mailboxes
 {
@@ -41,7 +42,7 @@ namespace Mailboxes
                 var mailbox = _mailbox;
                 _taskAwaiter.OnCompleted(() =>
                 {
-                    mailbox.QueueAction(new MailboxAction(a => (a as Action)?.Invoke(), continuation), actionContext);
+                    mailbox.QueueAction(new MailboxAction(continuation), actionContext);
                 });
             }
 
@@ -74,7 +75,7 @@ namespace Mailboxes
                 var mailbox = _mailbox;
                 _taskAwaiter.OnCompleted(() =>
                 {
-                    mailbox.QueueAction(new MailboxAction(a => (a as Action)?.Invoke(), continuation), actionContext);
+                    mailbox.QueueAction(new MailboxAction(continuation), actionContext);
                 });
             }
 

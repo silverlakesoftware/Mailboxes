@@ -4,6 +4,7 @@
 // Created by Jamie da Silva on 9/29/2019 3:41 PM
 
 using System.Collections.Concurrent;
+using Mailboxes.Internal;
 
 namespace Mailboxes
 {
