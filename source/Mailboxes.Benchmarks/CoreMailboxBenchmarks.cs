@@ -59,7 +59,8 @@ namespace Mailboxes.Benchmarks
 
             mailbox.Execute(SetDoneAction, null);
 
-            SpinWait.SpinUntil(IsDoneFunc);
+            while (!_done)
+                Thread.SpinWait(1);
         }
 
         [Benchmark(OperationsPerInvoke = 1000)]

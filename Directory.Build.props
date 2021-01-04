@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Authors>Jamie da Silva</Authors>
     <Company>Silverlake Software LLC</Company>
-    <Copyright>Copyright &#169; 2019 - 2020, Silverlake Software LLC and Contributors (see NOTICES file).</Copyright>
+    <Copyright>Copyright &#169; 2019 - 2021, Silverlake Software LLC and Contributors (see NOTICES file).</Copyright>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/silverlakesoftware/mailboxes</RepositoryUrl>
   </PropertyGroup>

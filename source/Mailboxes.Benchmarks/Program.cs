@@ -10,9 +10,11 @@ namespace Mailboxes.Benchmarks
     {
         static void Main(string[] args)
         {
-            //RunExecutionPatternBenchmarks();
-            BenchmarkRunner.Run<CoreMailboxBenchmarks>();
-            BenchmarkRunner.Run<ComparisonBenchmarks>();
+            BenchmarkSwitcher.FromTypes(new[]
+            {
+                typeof(CoreMailboxBenchmarks),
+                typeof(ComparisonBenchmarks)
+            }).Run(args);
         }
 
         static void RunExecutionPatternBenchmarks()
