@@ -99,7 +99,7 @@ A CancellationToken can change it's state at any time which violates the concurr
 ## Benchmarks
 
 To run benchmarks from the command line:
-`dotnet run -c Release -p source/Mailboxes.Benchmarks -f netcoreapp3.0 -- --filter * --job short`
+`dotnet run -c Release -p source/Mailboxes.Benchmarks -f net5.0 -- --filter * --job short`
 
 ## Contributions
 
