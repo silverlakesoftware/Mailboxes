@@ -4,7 +4,7 @@ variables:
 - group: MailboxNugetVariables
 
 trigger:
-- master
+- main
 - develop
 
 pool:
@@ -24,8 +24,8 @@ steps:
     script: 'powershell -ExecutionPolicy ByPass -File build.ps1 -script "build.cake" -target "Default" -verbosity normal'
 
 - task: CmdLine@2
-  displayName: 'Run Cake Script - Publish (for master only)'
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  displayName: 'Run Cake Script - Publish (for main only)'
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
   inputs:
     script: 'powershell -ExecutionPolicy ByPass -File build.ps1 -script "build.cake" -target "Publish" -verbosity normal'
   env:
